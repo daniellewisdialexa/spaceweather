@@ -27,8 +27,8 @@ will be provided back
 - Get NASA api key (api.nasa.gov)
 - Add in appsettings.json
 - Build
-- run in debug mode
-- Open postman or alike tool
+- Run 'dotnet run' in the developer terminal
+- Open postman or alike tool to hit endpoints
 
 
 ## Endpoints
