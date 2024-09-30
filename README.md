@@ -57,3 +57,68 @@ CME - Coronal mass ejection
 - api/report/scottplot  - Get a visual of the CME and FLR data on a scatter plot that maps the intensity of the FLR to the speed of the CME, displays in html
 
 
+## Data Examples & Resources 
+ # Links
+ - https://ccmc.gsfc.nasa.gov/wsa-dashboard/ - Neat dashboard for solar data visuals 
+ - https://ccmc.gsfc.nasa.gov/RoR_WWW/SWREDI/training-for-engineers/Flares_CMEs_SEP.pdf - Flares, CMEs and SEPs
+ - https://www.swpc.noaa.gov/ - Space Weather Prediction Center
+ - https://scied.ucar.edu/learning-zone/sun-space-weather/what-space-weather -What Is Space Weather and How Does It Affect the Earth?
+ - https://celestrak.org/SpaceData/ - Some neat space data
+ - https://kauai.ccmc.gsfc.nasa.gov/DONKI/ - Home page the DONKI Api
+
+
+# Data examples
+
+Below is a excerpt from the Same time report (report/sametime) that helps correlate high speed CMEs to high intensity FLRs 
+   ```json
+  [
+  {
+    "flareID": "2024-08-31T00:38:00-FLR-001",
+    "flareClassType": "M1.1",
+    "flareBeginTime": "2024-08-31T00:38:00Z",
+    "flarePeakTime": "2024-08-31T00:49:00Z",
+    "flareRiseDuration": 11,
+    "flareLink": "https://webtools.ccmc.gsfc.nasa.gov/DONKI/view/FLR/33070/-1",
+    "cmeid": "2024-08-31T00:36:00-CME-001",
+    "cmeStartTime": "2024-08-31T00:36:00Z",
+    "timeDifferenceMins": -2,
+    "cmeAnalyses": [
+      {
+        "isMostAccurate": true,
+        "type": "S",
+        "speed": 386,
+        "latitude": 30,
+        "longitude": -43,
+        "halfAngle": 17,
+        "link": "https://webtools.ccmc.gsfc.nasa.gov/DONKI/view/CMEAnalysis/33082/-1"
+      }
+    ]
+  },
+  {
+    "flareID": "2024-08-31T00:38:00-FLR-001",
+    "flareClassType": "M1.1",
+    "flareBeginTime": "2024-08-31T00:38:00Z",
+    "flarePeakTime": "2024-08-31T00:49:00Z",
+    "flareRiseDuration": 11,
+    "flareLink": "https://webtools.ccmc.gsfc.nasa.gov/DONKI/view/FLR/33070/-1",
+    "cmeid": "2024-08-31T00:53:00-CME-001",
+    "cmeStartTime": "2024-08-31T00:53:00Z",
+    "timeDifferenceMins": 15,
+    "cmeAnalyses": [
+      {
+        "isMostAccurate": true,
+        "type": "S",
+        "speed": 419,
+        "latitude": 26,
+        "longitude": 102,
+        "halfAngle": 24,
+        "link": "https://webtools.ccmc.gsfc.nasa.gov/DONKI/view/CMEAnalysis/33078/-1"
+      }
+    ]
+  },
+   ```
+This image comes from the scatter plot report (report/scottplot) 
+![image](https://github.com/user-attachments/assets/7c93ee2e-eea0-43e3-a72f-a02d95a489f7)
+
+
+
