@@ -1,4 +1,4 @@
-@spaceWeatherApi_HostAddress = http://localhost:5000
+@spaceWeatherApi_HostAddress = http://localhost:5184
 
 GET {{spaceWeatherApi_HostAddress}}/weatherforecast/  //TODO: Update this path
 Accept: application/json

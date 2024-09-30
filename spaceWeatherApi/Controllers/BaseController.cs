@@ -163,31 +163,6 @@ namespace SpaceWeatherApi.Controllers
             return data;
         }
 
-       //NOTE is this the same as filter?
-        protected static List<object> SearchData<T>(List<T> data, string searchTerm)
-        {
-            if (data == null || data.Count == 0)
-            {
-                return [];
-            }
-
-            if (string.IsNullOrEmpty(searchTerm))
-            {
-                return data.Cast<object>().ToList();
-            }
-
-            var properties = typeof(T).GetProperties();
-
-            return data
-                .Where(item => properties.Any(property =>
-                {
-                    var value = property.GetValue(item, null)?.ToString() ?? string.Empty;
-                    return value.Contains(searchTerm, StringComparison.OrdinalIgnoreCase);
-                }))
-                .Cast<object>()
-                .ToList();
-        }
-
         /// <summary>
         /// Order data based on the property and order enum (Asc/Desc)
         /// </summary>
