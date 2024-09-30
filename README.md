@@ -57,8 +57,8 @@ CME - Coronal mass ejection
 - api/report/scottplot  - Get a visual of the CME and FLR data on a scatter plot that maps the intensity of the FLR to the speed of the CME, displays in html
 
 
-## Data Examples & Resources 
- # Links
+# Data Examples & Resources 
+ ## Links
  - https://ccmc.gsfc.nasa.gov/wsa-dashboard/ - Neat dashboard for solar data visuals 
  - https://ccmc.gsfc.nasa.gov/RoR_WWW/SWREDI/training-for-engineers/Flares_CMEs_SEP.pdf - Flares, CMEs and SEPs
  - https://www.swpc.noaa.gov/ - Space Weather Prediction Center
@@ -67,7 +67,7 @@ CME - Coronal mass ejection
  - https://kauai.ccmc.gsfc.nasa.gov/DONKI/ - Home page the DONKI Api
 
 
-# Data examples
+## Data examples
 
 Below is a excerpt from the Same time report (report/sametime) that helps correlate high speed CMEs to high intensity FLRs 
    ```json
