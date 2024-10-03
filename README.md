@@ -117,7 +117,8 @@ Below is a excerpt from the Same time report (report/sametime) that helps correl
     ]
   },
    ```
-This image comes from the scatter plot report (report/scottplot) 
+This image comes from the scatter plot report (report/scottplot)  
+
 ![image](https://github.com/user-attachments/assets/7c93ee2e-eea0-43e3-a72f-a02d95a489f7)
 
 
