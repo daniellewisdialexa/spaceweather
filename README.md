@@ -30,6 +30,19 @@ will be provided back
 - Run 'dotnet run' in the developer terminal
 - Open postman or alike tool to hit endpoints
 
+App settings json
+```json
+{
+  "ConnectionStrings": {
+    "DONKIBaseURL": "https://api.nasa.gov/DONKI/",
+    "NOAABaseURL": "https://services.swpc.noaa.gov/"
+  },
+
+  "IdentitySettings": {
+    "ApiKey": "{add api key here}"
+  }
+ }
+```
 
 ## Endpoints
 Currently, only http is configured
@@ -46,7 +59,7 @@ CME - Coronal mass ejection
 ## Order Controller
 - api/{endpoint}/order - Order data (ASC/DESC) by specific property
 
-## Group Controller 
+## Group Controller 4
 - api/{endpoint}/group  - Group data by specific property
 
 ## Filter Controller 
@@ -55,7 +68,7 @@ CME - Coronal mass ejection
 ## Correlation Controller
 - api/report/sametime  - Get report of FLR and CME event data that happened nearly at the same time
 - api/report/scottplot  - Get a visual of the CME and FLR data on a scatter plot that maps the intensity of the FLR to the speed of the CME, displays in html
-
+- /api/report/flagged - Get back a list of events in text format that are interesting, High intensity flares with slow CMEs, Low Intensity flares with fast CMEs, Flares with no CMEs
 
 # Data Examples & Resources 
  ## Links
@@ -65,6 +78,7 @@ CME - Coronal mass ejection
  - https://scied.ucar.edu/learning-zone/sun-space-weather/what-space-weather -What Is Space Weather and How Does It Affect the Earth?
  - https://celestrak.org/SpaceData/ - Some neat space data
  - https://kauai.ccmc.gsfc.nasa.gov/DONKI/ - Home page the DONKI Api
+ - https://www.weather.gov/media/nws/Results-of-the-First-National-Survey-of-User-Needs-for-Space-Weather-2024.pdf  - In dept report of needs for space weather data
 
 
 ## Data examples
@@ -121,5 +135,8 @@ This image comes from the scatter plot report (report/scottplot)
 
 ![image](https://github.com/user-attachments/assets/7c93ee2e-eea0-43e3-a72f-a02d95a489f7)
 
+
+Interesting events report example
+![image](https://github.com/user-attachments/assets/6fec70ba-6db8-4619-b85b-190c5c9ed133)
 
 
