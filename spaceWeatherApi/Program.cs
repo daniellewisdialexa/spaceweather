@@ -1,11 +1,12 @@
-using spaceweather;
 using spaceWeatherApi;
+using spaceWeatherApi.Utils;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.Configure<AppSettings>(builder.Configuration);
 builder.Services.AddHttpClient<NasaApiClient>();
+builder.Services.AddScoped<FlareAnalyzer>();
 builder.Services.AddControllers();
 
 var app = builder.Build();

@@ -4,26 +4,28 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace spaceweather
+namespace spaceWeatherApi
 {
     public class AppSettings
     {
         public ConnectionStrings ConnectionStrings { get; set; }
         public IdentitySettings IdentitySettings { get; set; }
-   
+
 
         public AppSettings()
         {
             ConnectionStrings = new ConnectionStrings();
             IdentitySettings = new IdentitySettings();
-            
+
         }
     }
 
     public class ConnectionStrings
     {
         public string DONKIBaseURL { get; set; } = string.Empty;
+        public string NOAABaseURl { get; set; } = string.Empty;
     }
+
 
     public class IdentitySettings
     {

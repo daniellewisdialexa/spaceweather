@@ -9,7 +9,7 @@ namespace SpaceWeatherApi.Controllers
         [HttpGet]
         public async Task<IActionResult> GetGroupedData(string endpoint, [FromQuery] string property, string? startDate = null, string? endDate = null)
         {
-            var data = await GetDataAsync (endpoint, startDate, endDate);
+            var data = await _nasaApiClient.GetDataAsync(endpoint, startDate, endDate);
             if (data == null)
             {
                 return StatusCode(500, "Failed to retrieve data.");

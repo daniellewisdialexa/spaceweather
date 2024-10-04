@@ -10,7 +10,7 @@ namespace SpaceWeatherApi.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAllData(string endpoint, [FromQuery] string? startDate = null, string? endDate = null)
         {
-            var data = await GetDataAsync(endpoint.ToUpper(), startDate, endDate);
+            var data = await _nasaApiClient.GetDataAsync(endpoint.ToUpper(), startDate, endDate);
 
             if (data == null)
             {
@@ -23,7 +23,7 @@ namespace SpaceWeatherApi.Controllers
         [HttpGet("count")]
         public async Task<IActionResult> CountProperties(string endpoint, string property, string? startDate = null, string? endDate = null)
         {
-            var data = await GetDataAsync(endpoint.ToUpper(), startDate, endDate);
+            var data = await _nasaApiClient.GetDataAsync(endpoint.ToUpper(), startDate, endDate);
 
             if (data == null)
             {

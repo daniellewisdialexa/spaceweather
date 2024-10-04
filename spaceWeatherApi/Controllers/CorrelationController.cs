@@ -2,26 +2,30 @@
 using spaceWeatherApi.DataModels;
 using SpaceWeatherApi.Controllers;
 using ScottPlot;
+using System.Text;
+using System.Linq;
+using spaceWeatherApi.Utils;
 namespace spaceWeatherApi.Controllers
 {
 
-
     [ApiController]
     [Route("api/report")]
-    public class CorrelationController(NasaApiClient nasaApiClient) : BaseController(nasaApiClient)
+    public class CorrelationController(NasaApiClient nasaApiClient, FlareAnalyzer flareAnalyzer) : BaseController(nasaApiClient)
     {
+        private readonly FlareAnalyzer _flareAnalyzer = flareAnalyzer;
+
         [HttpGet("sametime")]
         public async Task<IActionResult> GetCorrelationSameTimeEvents([FromQuery] string? startDate = null, string? endDate = null)
         {
-            var FLRdata = await GetDataAsync("FLR", startDate, endDate) ?? [];
-            var CMEdata = await GetDataAsync("CME", startDate, endDate) ?? [];
-           
+            var FLRdata = await _nasaApiClient.GetDataAsync("FLR", startDate, endDate) ?? [];
+            var CMEdata = await _nasaApiClient.GetDataAsync("CME", startDate, endDate) ?? [];
+
             var flareEvents = FLRdata.Cast<FlareEvent>().Where(f => f.BeginTime.HasValue && f.PeakTime.HasValue).ToList();
             var CMEEvents = CMEdata.Cast<CMEEvent>().Where(c => c.StartTime.HasValue).ToList();
 
             TimeSpan timeVariation = TimeSpan.FromMinutes(5); // 5 minutes for a slightly wider window
             TimeSpan maxFlareDuration = TimeSpan.FromHours(2); // Maximum flare duration
-            
+
             var correlatedEvents = flareEvents
                 .SelectMany(flare => CMEEvents
                     .Where(cme => flare.BeginTime.HasValue && flare.PeakTime.HasValue && cme.StartTime.HasValue &&
@@ -30,7 +34,7 @@ namespace spaceWeatherApi.Controllers
                                   (flare.PeakTime.Value - flare.BeginTime.Value) <= maxFlareDuration)
                     .Select(cme => CreateDetailedCorrelatedEventReport(flare, cme)))
                 .ToList();
-        
+
             return Ok(correlatedEvents);
         }
 
@@ -68,8 +72,8 @@ namespace spaceWeatherApi.Controllers
         public async Task<IActionResult> GetScatterPlot([FromQuery] string? startDate = null, string? endDate = null)
         {
 
-            var FLRdata = await GetDataAsync("FLR", startDate, endDate) ?? [];
-            var CMEdata = await GetDataAsync("CME", startDate, endDate) ?? [];
+            var FLRdata = await _nasaApiClient.GetDataAsync("FLR", startDate, endDate) ?? [];
+            var CMEdata = await _nasaApiClient.GetDataAsync("CME", startDate, endDate) ?? [];
 
             var flareEvents = FLRdata.Cast<FlareEvent>().ToList();
             var CMEEvents = CMEdata.Cast<CMEEvent>().ToList();
@@ -111,13 +115,13 @@ namespace spaceWeatherApi.Controllers
             plt.YLabel("CME Speed (km/s)");
 
             // Set custom tick labels for the X-axis
-            double[] tickPositions = { -8, -7, -6, -5, -4 }; 
+            double[] tickPositions = { -8, -7, -6, -5, -4 };
             string[] tickLabels = { "A", "B", "C", "M", "X" };
 
             // Set axis limits to ensure all data is visible
             plt.Axes.SetLimits(
-            left: -9,  
-            right: -3, 
+            left: -9,
+            right: -3,
             bottom: cmeSpeeds.Min(),
             top: cmeSpeeds.Max() * 1.1
             );
@@ -138,7 +142,7 @@ namespace spaceWeatherApi.Controllers
             plt.Axes.Bottom.MajorTickStyle.Length = 10;
             plt.Axes.Bottom.MinorTickStyle.Length = 5;
 
-            
+
             //Convert the image to a base64 string
             byte[] imageBytes = plt.GetImage(800, 600).GetImageBytes();
             string base64 = Convert.ToBase64String(imageBytes);
@@ -152,7 +156,7 @@ namespace spaceWeatherApi.Controllers
             </body>
             </html>";
 
-          
+
             /// <summary>
             /// Converts a flare class to a numeric value
             /// </summary>
@@ -176,7 +180,7 @@ namespace spaceWeatherApi.Controllers
                     case 'C': baseValue = 1e-6; break;
                     case 'M': baseValue = 1e-5; break;
                     case 'X': baseValue = 1e-4; break;
-                    default: return 0; 
+                    default: return 0;
                 }
 
                 if (flareClass.Length > 1 && double.TryParse(flareClass.AsSpan(1), out double multiplier))
@@ -186,15 +190,39 @@ namespace spaceWeatherApi.Controllers
 
                 return baseValue;
             }
-
-         
-            // Return the HTML
             return Content(html, "text/html");
-
-
         }
 
 
-    }
 
+        [HttpGet("flagged")]
+        public async Task<IActionResult> GetFlaggedEvents([FromQuery] string? startDate = null, string? endDate = null)
+        {
+            var FLRdata = await _nasaApiClient.GetDataAsync("FLR", startDate, endDate) ?? [];
+            var CMEdata = await _nasaApiClient.GetDataAsync("CME", startDate, endDate) ?? [];
+
+            var flareEvents = FLRdata.Cast<FlareEvent>().ToList();
+            var CMEEvents = CMEdata.Cast<CMEEvent>().ToList();
+
+            var interestingEvents = await _flareAnalyzer.AnalyzeEventsAsync(flareEvents, CMEEvents);
+
+            var report = new StringBuilder();
+            report.AppendLine("# Interesting Solar Events Report");
+            report.AppendLine();
+
+            foreach (var evt in interestingEvents)
+            {
+                report.AppendLine($"## Flare ID: {evt.Flare.FlrID}");
+                report.AppendLine($"- Flare Class: {evt.Flare.ClassType}");
+                report.AppendLine($"- CME Speed: {evt.CMESpeed} km/s");
+                report.AppendLine($"- Surprise Factor: {evt.SurpriseFactor:F2}");
+                report.AppendLine($"- Reason: {evt.Reason}");
+                report.AppendLine();
+            }
+
+            return Content(report.ToString(), "text/markdown");
+        }
+    }
 }
+
+ 

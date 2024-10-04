@@ -11,13 +11,13 @@ namespace spaceWeatherApi.DataModels
         public List<Instrument> Instruments { get; set; } = [];
 
         [JsonProperty("beginTime")]
-        public DateTime? BeginTime { get; set; } 
+        public DateTime? BeginTime { get; set; }
 
         [JsonProperty("peakTime")]
-        public DateTime? PeakTime { get; set; } 
+        public DateTime? PeakTime { get; set; }
 
         [JsonProperty("endTime")]
-        public DateTime? EndTime { get; set; } 
+        public DateTime? EndTime { get; set; }
 
         [JsonProperty("classType")]
         public string ClassType { get; set; } = string.Empty;

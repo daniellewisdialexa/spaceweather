@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using spaceWeatherApi;
 using spaceWeatherApi.DataModels;
+using spaceWeatherApi.Utils;
 using System.Globalization;
 using System.Reflection;
 
@@ -12,15 +13,6 @@ namespace SpaceWeatherApi.Controllers
     {
         protected readonly NasaApiClient _nasaApiClient = nasaApiClient;
 
-        /// <summary>
-        /// Mapping of endpoint names to their respective event types
-        /// </summary>
-        public static readonly Dictionary<string, Type> EndpointTypeMap = new()
-        {
-            { "FLR", typeof(FlareEvent) },
-            { "CME", typeof(CMEEvent) }
-
-        };
 
         /// <summary>
         /// Order enum for ordering data
@@ -31,98 +23,7 @@ namespace SpaceWeatherApi.Controllers
             Desc
         }
 
-
-        /// <summary>
-        /// Base method to retrieve data from the NASA API
-        /// </summary>
-        /// <param name="endpoint"></param>
-        /// <param name="startDate"></param> 
-        /// <param name="endDate"></param>
-        /// <returns></returns>
-        protected async Task<List<object>?> GetDataAsync(string endpoint, string? startDate = null, string? endDate = null)
-        {
-            var (parsedStartDate, parsedEndDate) = ParseDateTime(startDate, endDate);
-
-            if (!EndpointTypeMap.TryGetValue(endpoint, out var eventType))
-            {
-                return null;
-            }
-
-            var method = typeof(NasaApiClient).GetMethod("GetDataAsync")?.MakeGenericMethod(eventType);
-
-            if (method?.Invoke(_nasaApiClient, [endpoint, parsedStartDate, parsedEndDate]) is not Task task)
-            {
-                return null;
-            }
-
-            // Await the task and get the result
-            await task.ConfigureAwait(false);
-
-            // Use reflection to get the result property of the task
-            var resultProperty = task.GetType().GetProperty("Result");
-            if (resultProperty != null)
-            {
-                var data = resultProperty.GetValue(task);
-                if (data is IEnumerable<object> enumerable)
-                {
-                    return enumerable.ToList();
-                }
-            }
-
-            return null;
-        }
-
-
-        /// <summary>
-        /// Parsing the start and end date strings into DateTime objects.   
-        /// startDate param accepts strings: "today", "yr{number}", "yyyy-MM-dd"
-        /// </summary>
-        /// <param name="startDate"></param> 
-        /// <param name="endDate"></param>
-        /// <returns></returns>
-        /// <exception cref="ArgumentException"></exception>
-        protected (DateTime parsedStartDate, DateTime parsedEndDate) ParseDateTime(string? startDate, string? endDate)
-        {
-            DateTime parsedStartDate;
-            DateTime parsedEndDate;
-
-            if (string.IsNullOrEmpty(startDate) && string.IsNullOrEmpty(endDate))
-            {
-                parsedStartDate = DateTime.UtcNow.AddDays(-30);
-                parsedEndDate = DateTime.UtcNow;
-            }
-            else if (startDate != null && startDate.Equals("today", StringComparison.OrdinalIgnoreCase))
-            {
-                parsedStartDate = DateTime.UtcNow;
-                parsedEndDate = DateTime.UtcNow;
-            }
-            else if (startDate != null && startDate.StartsWith("yr", StringComparison.OrdinalIgnoreCase))
-            {
-                if (int.TryParse(startDate.AsSpan(2), out int years))
-                {
-                    parsedStartDate = DateTime.UtcNow.AddYears(-years);
-                    parsedEndDate = DateTime.UtcNow;
-                }
-                else
-                {
-                    throw new ArgumentException("Invalid year format in start date", nameof(startDate));
-                }
-            }
-            else
-            {
-                parsedStartDate = DateTime.TryParseExact(startDate, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime sDate)
-                    ? sDate
-                    : throw new ArgumentException("Invalid start date format", nameof(startDate));
-
-                parsedEndDate = string.IsNullOrEmpty(endDate)
-                    ? DateTime.UtcNow
-                    : DateTime.TryParseExact(endDate, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime eDate)
-                        ? eDate
-                        : throw new ArgumentException("Invalid end date format", nameof(endDate));
-            }
-
-            return (parsedStartDate, parsedEndDate);
-        }
+ 
 
 
         /// <summary>
