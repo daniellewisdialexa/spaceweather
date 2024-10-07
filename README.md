@@ -1,4 +1,6 @@
 # SpaceWeather
+
+
 ![.Net](https://img.shields.io/badge/.NET-5C2D91?style=for-the-badge&logo=.net&logoColor=white) ![Visual Studio](https://img.shields.io/badge/Visual%20Studio-5C2D91.svg?style=for-the-badge&logo=visual-studio&logoColor=white) ![C#](https://img.shields.io/badge/c%23-%23239120.svg?style=for-the-badge&logo=csharp&logoColor=white)
   ### Tech stack
   - C# 12
@@ -38,8 +40,43 @@ App settings json
     "NOAABaseURL": "https://services.swpc.noaa.gov/"
   },
 
+
+  "DataValues": {
+    "CME_ASSOCIATION_WINDOW_HOURS": 6,
+    "ExpectedSpeedRanges": {
+      "C": {
+        "Min": 300.0,
+        "Max": 800.0
+      },
+      "M": {
+        "Min": 500.0,
+        "Max": 1200.0
+      },
+      "X": {
+        "Min": 800.0,
+        "Max": 2000.0
+      }
+    },
+    "MagneticClassDescriptions": {
+      "α": "Alpha: Unipolar sunspot group",
+      "A": "Alpha: Unipolar sunspot group",
+      "β": "Beta: Bipolar sunspot group with a simple division between polarities",
+      "B": "Beta: Bipolar sunspot group with a simple division between polarities",
+      "γ": "Gamma: Complex sunspot group with irregular distribution of polarities",
+      "G": "Gamma: Complex sunspot group with irregular distribution of polarities",
+      "δ": "Delta: Complex sunspot group with opposite polarity umbrae within same penumbra",
+      "D": "Delta: Complex sunspot group with opposite polarity umbrae within same penumbra",
+      "β-γ": "Beta-Gamma: Bipolar sunspot group with complex division between polarities",
+      "BG": "Beta-Gamma: Bipolar sunspot group with complex division between polarities",
+      "β-δ": "Beta-Delta: Bipolar sunspot group with opposite polarity umbrae within same penumbra",
+      "BD": "Beta-Delta: Bipolar sunspot group with opposite polarity umbrae within same penumbra",
+      "β-γ-δ": "Beta-Gamma-Delta: Complex sunspot group with opposite polarity umbrae within same penumbra",
+      "BGD": "Beta-Gamma-Delta: Complex sunspot group with opposite polarity umbrae within same penumbra"
+    }
+
+  },
   "IdentitySettings": {
-    "ApiKey": "{add api key here}"
+    "ApiKey": "your key here"
   }
  }
 ```
@@ -47,11 +84,13 @@ App settings json
 ## Endpoints
 Currently, only http is configured
 There are two supported data sources from the DONKI NASA API:
-FLR - Solar flare
-CME - Coronal mass ejection
+* FLR - Solar flare
+* CME - Coronal mass ejection
+We also get data from NOAA - https://www.swpc.noaa.gov/
+  * Sunspot  
 {endpoint} will be seen around this can be FLR or CME 
 
-- Base: http://localhost:{port}
+- Base URL: http://localhost:{port}
 ## Starting point Controller
 - /api/{endpoint} - Get all data
 - /api/{endpoint}/count - count of a specific property
@@ -68,7 +107,7 @@ CME - Coronal mass ejection
 ## Correlation Controller
 - api/report/sametime  - Get report of FLR and CME event data that happened nearly at the same time
 - api/report/scottplot  - Get a visual of the CME and FLR data on a scatter plot that maps the intensity of the FLR to the speed of the CME, displays in html
-- /api/report/flagged - Get back a list of events in text format that are interesting, High intensity flares with slow CMEs, Low Intensity flares with fast CMEs, Flares with no CMEs
+- /api/report/flagged - Get back a list of events, in text format, that are interesting, High intensity flares with slow CMEs, Low Intensity flares with fast CMEs, Flares with no CMEs
 
 # Data Examples & Resources 
  ## Links
@@ -137,6 +176,7 @@ This image comes from the scatter plot report (report/scottplot)
 
 
 Interesting events report example
-![image](https://github.com/user-attachments/assets/6fec70ba-6db8-4619-b85b-190c5c9ed133)
+![image](https://github.com/user-attachments/assets/08d9f813-4e30-42a7-b8c6-060daad1191a)
+
 
 
