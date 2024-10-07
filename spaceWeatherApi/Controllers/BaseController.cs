@@ -1,8 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using spaceWeatherApi;
-using spaceWeatherApi.DataModels;
-using spaceWeatherApi.Utils;
-using System.Globalization;
 using System.Reflection;
 
 namespace SpaceWeatherApi.Controllers
@@ -23,9 +19,6 @@ namespace SpaceWeatherApi.Controllers
             Desc
         }
 
- 
-
-
         /// <summary>
         /// Filter data based on the filter string array
         /// </summary>
@@ -36,11 +29,10 @@ namespace SpaceWeatherApi.Controllers
         protected static List<T> FilterData<T>(List<T> data, string[] filter)
         {
             if (filter == null || filter.Length == 0) return data;
-            else
             {
                 foreach (var filterItem in filter)
                 {
-                    var filterParts = filterItem.Split('='); //TODO: add support for linked event filtering
+                    var filterParts = filterItem.Split('='); 
                     if (filterParts.Length == 2)
                     {
                         var filterProperty = filterParts[0];

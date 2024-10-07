@@ -1,11 +1,18 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using spaceWeatherApi;
 namespace SpaceWeatherApi.Controllers
 {
     [ApiController]
     [Route("api/{endpoint}/group")]
     public class GroupController(NasaApiClient nasaApiClient) : BaseController(nasaApiClient)
     {
+        /// <summary>
+        /// Get the data grouped by the specified property
+        /// </summary>
+        /// <param name="endpoint"></param> (FLR, CME)
+        /// <param name="property"></param> The json property to group by
+        /// <param name="startDate"></param>
+        /// <param name="endDate"></param>
+        /// <returns></returns>
         [HttpGet]
         public async Task<IActionResult> GetGroupedData(string endpoint, [FromQuery] string property, string? startDate = null, string? endDate = null)
         {

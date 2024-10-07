@@ -1,5 +1,5 @@
-using spaceWeatherApi;
-using spaceWeatherApi.Utils;
+using SpaceWeatherApi;
+using SpaceWeatherApi.Utils;
 
 var builder = WebApplication.CreateBuilder(args);
 

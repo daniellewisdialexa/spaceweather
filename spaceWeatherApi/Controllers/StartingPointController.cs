@@ -1,8 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using spaceWeatherApi;
+using SpaceWeatherApi;
 
 namespace SpaceWeatherApi.Controllers
 {
+
     [ApiController]
     [Route("api/{endpoint}")]
     public class StartingPointController(NasaApiClient nasaApiClient) : BaseController(nasaApiClient)
@@ -20,6 +21,14 @@ namespace SpaceWeatherApi.Controllers
             return Ok(data);
         }
 
+        /// <summary>
+        /// Get a count of the specified property in the data
+        /// </summary>
+        /// <param name="endpoint"></param> (FLR, CME)
+        /// <param name="property"></param> JSON property 
+        /// <param name="startDate"></param>
+        /// <param name="endDate"></param>
+        /// <returns></returns>
         [HttpGet("count")]
         public async Task<IActionResult> CountProperties(string endpoint, string property, string? startDate = null, string? endDate = null)
         {

@@ -1,13 +1,19 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using spaceWeatherApi;
+using SpaceWeatherApi;
 namespace SpaceWeatherApi.Controllers
 {
     [ApiController]
     [Route("api/{endpoint}/filter")]
-    public class FilterController : BaseController
+    public class FilterController(NasaApiClient nasaApiClient) : BaseController(nasaApiClient)
     {
-        public FilterController(NasaApiClient nasaApiClient) : base(nasaApiClient) { }
-
+        /// <summary>
+        /// filter data
+        /// </summary>
+        /// <param name="endpoint"></param> (e.g. "FLR", "CME")
+        /// <param name="filter"></param> - The json property 
+        /// <param name="startDate"></param>
+        /// <param name="endDate"></param>
+        /// <returns></returns>
         [HttpGet]
         public async Task<IActionResult> FilterData(string endpoint,[FromQuery] string[] filter, string? startDate = null, string? endDate = null)
         {
@@ -21,7 +27,6 @@ namespace SpaceWeatherApi.Controllers
             {
                 data = FilterData(data, filter);
             }
-
             return Ok(data);
         }
     }

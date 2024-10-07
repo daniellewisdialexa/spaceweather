@@ -1,11 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using spaceWeatherApi.DataModels;
-using SpaceWeatherApi.Controllers;
-using ScottPlot;
+using SpaceWeatherApi.DataModels;
 using System.Text;
-using System.Linq;
-using spaceWeatherApi.Utils;
-namespace spaceWeatherApi.Controllers
+using SpaceWeatherApi.Utils;
+namespace SpaceWeatherApi.Controllers
 {
 
     [ApiController]
@@ -13,7 +10,12 @@ namespace spaceWeatherApi.Controllers
     public class CorrelationController(NasaApiClient nasaApiClient, FlareAnalyzer flareAnalyzer) : BaseController(nasaApiClient)
     {
         private readonly FlareAnalyzer _flareAnalyzer = flareAnalyzer;
-
+        /// <summary>
+        /// Get solar events that might have occurred nearly at the same time
+        /// </summary>
+        /// <param name="startDate"></param>
+        /// <param name="endDate"></param>
+        /// <returns></returns>
         [HttpGet("sametime")]
         public async Task<IActionResult> GetCorrelationSameTimeEvents([FromQuery] string? startDate = null, string? endDate = null)
         {
@@ -22,7 +24,7 @@ namespace spaceWeatherApi.Controllers
 
             var flareEvents = FLRdata.Cast<FlareEvent>().Where(f => f.BeginTime.HasValue && f.PeakTime.HasValue).ToList();
             var CMEEvents = CMEdata.Cast<CMEEvent>().Where(c => c.StartTime.HasValue).ToList();
-
+            
             TimeSpan timeVariation = TimeSpan.FromMinutes(5); // 5 minutes for a slightly wider window
             TimeSpan maxFlareDuration = TimeSpan.FromHours(2); // Maximum flare duration
 
@@ -38,6 +40,12 @@ namespace spaceWeatherApi.Controllers
             return Ok(correlatedEvents);
         }
 
+        /// <summary>
+        /// Create a detailed report of correlated solar events
+        /// </summary>
+        /// <param name="flare"></param>
+        /// <param name="cme"></param>
+        /// <returns></returns>
         private static object CreateDetailedCorrelatedEventReport(FlareEvent flare, CMEEvent cme)
         {
             var timeDifference = (cme.StartTime?.Subtract(flare.BeginTime ?? DateTime.MinValue).TotalMinutes) ?? 0;
@@ -67,11 +75,15 @@ namespace spaceWeatherApi.Controllers
             };
         }
 
-
+        /// <summary>
+        /// Generate a scatter plot of solar flare intensity vs CME speed, defaults to html output
+        /// </summary>
+        /// <param name="startDate"></param>
+        /// <param name="endDate"></param>
+        /// <returns></returns>
         [HttpGet("scottplot")]
         public async Task<IActionResult> GetScatterPlot([FromQuery] string? startDate = null, string? endDate = null)
         {
-
             var FLRdata = await _nasaApiClient.GetDataAsync("FLR", startDate, endDate) ?? [];
             var CMEdata = await _nasaApiClient.GetDataAsync("CME", startDate, endDate) ?? [];
 
@@ -99,14 +111,12 @@ namespace spaceWeatherApi.Controllers
             var plt = new ScottPlot.Plot();
             plt.Add.Scatter(flareIntensities, cmeSpeeds);
 
-
-
             // Transform flare intensities to logarithmic scale
             double[] logFlareIntensities = flareIntensities.Select(x => Math.Log10(x)).ToArray();
             var scatter = plt.Add.Scatter(logFlareIntensities, cmeSpeeds);
             scatter.Color = ScottPlot.Color.FromHex("#FF0000");
-            scatter.LineWidth = 0; // Set line width to 0 to remove lines
-            scatter.MarkerSize = 10; // Adjust the size of the dots
+            scatter.LineWidth = 0; 
+            scatter.MarkerSize = 10; 
             scatter.MarkerShape = ScottPlot.MarkerShape.FilledCircle;
 
             //Lables
@@ -114,7 +124,7 @@ namespace spaceWeatherApi.Controllers
             plt.XLabel("Flare Intensity (Log Scale)");
             plt.YLabel("CME Speed (km/s)");
 
-            // Set custom tick labels for the X-axis
+            // Set labels for the X-axis, flare classes
             double[] tickPositions = { -8, -7, -6, -5, -4 };
             string[] tickLabels = { "A", "B", "C", "M", "X" };
 
@@ -126,7 +136,7 @@ namespace spaceWeatherApi.Controllers
             top: cmeSpeeds.Max() * 1.1
             );
 
-            // Create a custom tick generator with our labels
+            // Create a custom tick generator with labels
             var customTickGenerator = new ScottPlot.TickGenerators.NumericManual();
             for (int i = 0; i < tickPositions.Length; i++)
             {
@@ -152,10 +162,9 @@ namespace spaceWeatherApi.Controllers
             <html>
             <body>
                 <h1>Solar Flare Intensity vs CME Speed</h1>
-                <img src='data:image/png;base64,{base64}' />
+                <img src='data:image/png;base64,{base64}'/>
             </body>
             </html>";
-
 
             /// <summary>
             /// Converts a flare class to a numeric value
@@ -174,7 +183,7 @@ namespace spaceWeatherApi.Controllers
                 {
                     //Uses scientific notation to convert
                     //the flare class to a numeric value
-                    //e = exponent
+                    //e = exponent, 1e=-8 means 10^-8
                     case 'A': baseValue = 1e-8; break;
                     case 'B': baseValue = 1e-7; break;
                     case 'C': baseValue = 1e-6; break;
@@ -193,8 +202,12 @@ namespace spaceWeatherApi.Controllers
             return Content(html, "text/html");
         }
 
-
-
+        /// <summary>
+        /// Get interesting solar events
+        /// </summary>
+        /// <param name="startDate"></param>
+        /// <param name="endDate"></param>
+        /// <returns></returns>
         [HttpGet("flagged")]
         public async Task<IActionResult> GetFlaggedEvents([FromQuery] string? startDate = null, string? endDate = null)
         {
@@ -211,12 +224,14 @@ namespace spaceWeatherApi.Controllers
             report.AppendLine();
 
             foreach (var evt in interestingEvents)
-            {
+            {   
+             
                 report.AppendLine($"## Flare ID: {evt.Flare.FlrID}");
                 report.AppendLine($"- Flare Class: {evt.Flare.ClassType}");
                 report.AppendLine($"- CME Speed: {evt.CMESpeed} km/s");
-                report.AppendLine($"- Surprise Factor: {evt.SurpriseFactor:F2}");
                 report.AppendLine($"- Reason: {evt.Reason}");
+                report.AppendLine($"- Link: {evt.Flare.Link}");
+                report.AppendLine($"- Linked Events: {evt.Flare.LinkedEvents}");
                 report.AppendLine();
             }
 

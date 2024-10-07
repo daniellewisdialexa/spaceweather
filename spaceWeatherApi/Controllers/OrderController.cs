@@ -1,11 +1,20 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using spaceWeatherApi;
+using SpaceWeatherApi;
 namespace SpaceWeatherApi.Controllers
 {
     [ApiController]
     [Route("api/{endpoint}/order")]
     public class OrderController(NasaApiClient nasaApiClient) : BaseController(nasaApiClient)
     {
+        /// <summary>
+        /// Order the data by the given property
+        /// </summary>
+        /// <param name="endpoint"></param> (FLR or CME)
+        /// <param name="order"></param> (Asc or Desc)
+        /// <param name="property"></param> The property to order by
+        /// <param name="startDate"></param>
+        /// <param name="endDate"></param>
+        /// <returns></returns>
         [HttpGet]
         public async Task<IActionResult> OrderFlareData(string endpoint,[FromQuery] Order order, string property, string? startDate = null, string? endDate = null)
         {

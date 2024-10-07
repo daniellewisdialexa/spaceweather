@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 
-namespace spaceWeatherApi.DataModels
+namespace SpaceWeatherApi.DataModels
 {
     public class Instrument
     {

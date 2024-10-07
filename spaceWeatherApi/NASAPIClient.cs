@@ -1,19 +1,16 @@
 ﻿using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
-using SkiaSharp;
-using spaceWeatherApi.DataModels;
+using SpaceWeatherApi.DataModels;
 using System.Globalization;
 using System.Net.Http;
 
-namespace spaceWeatherApi
+namespace SpaceWeatherApi
 {
     public class NasaApiClient(HttpClient httpClient, IOptions<AppSettings> appSettings)
     {
- 
+        private readonly HttpClient _httpClient = httpClient;
         private readonly AppSettings _appSettings = appSettings.Value;
-
-
 
         /// <summary>
         /// Mapping of endpoint names to their respective event types
@@ -24,7 +21,23 @@ namespace spaceWeatherApi
             { "CME", typeof(CMEEvent) },
         };
 
+        /// <summary>
+        /// Get all the sunspot data 
+        /// </summary>
+        /// <returns></returns>
+        public async Task<List<SunspotData>> GetAllSunspotDataAsync()
+        {
+            return await GetNOAADataAsync<SunspotData>("sunspot");
+        }
 
+        /// <summary>
+        /// Fetch data from the DONKI API
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="endpoint"></param>
+        /// <param name="startDate"></param>
+        /// <param name="endDate"></param>
+        /// <returns></returns>
         protected async Task<List<T>> FetchDONKIDataAsync<T>(string endpoint, DateTime? startDate = null, DateTime? endDate = null)
         {
             var queryParameters = new List<string>();
@@ -46,7 +59,7 @@ namespace spaceWeatherApi
 
             try
             {
-                var response = await httpClient.GetAsync(fullUrl);
+                var response = await _httpClient.GetAsync(fullUrl);
                 response.EnsureSuccessStatusCode();
 
                 var data = await response.Content.ReadAsStringAsync();
@@ -63,7 +76,6 @@ namespace spaceWeatherApi
             }
         }
 
-        //TODO move all Get data methods to API client class (rename class) 
         /// <summary>
         /// Base method to retrieve data from the NASA API
         /// </summary>
@@ -101,7 +113,6 @@ namespace spaceWeatherApi
                 return null;
             }
         }
-
 
         /// <summary>
         /// Parsing the start and end date strings into DateTime objects.   
@@ -154,23 +165,36 @@ namespace spaceWeatherApi
             return (parsedStartDate, parsedEndDate);
         }
 
-        public async Task<List<T>> GetNOAAData<T>(string endpoint)
+
+        /// <summary>
+        /// Get data from the NOAA depending on endpoint
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="endpoint"></param>
+        /// <returns></returns>
+        public async Task<List<T>> GetNOAADataAsync<T>(string endpoint)
         {
             return endpoint switch
             {
-                "sunspot" => await FetchNOAAData<T>("json/sunspot_report.json"),
+                "sunspot" => await FetchNOAADataAsync<T>("json/sunspot_report.json"),
                 _ => new List<T>()
             };
         }
 
-        protected async Task<List<T>> FetchNOAAData<T>(string endpoint)
+        /// <summary>
+        /// Fetch data from the NOAA API
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="endpoint"></param>
+        /// <returns></returns>
+        protected async Task<List<T>> FetchNOAADataAsync<T>(string endpoint)
         {
             try
             {
                 string baseUrl = _appSettings.ConnectionStrings.NOAABaseURl;
                 string url = new Uri(new Uri(baseUrl), endpoint).ToString();
 
-                HttpResponseMessage response = await httpClient.GetAsync(url);
+                HttpResponseMessage response = await _httpClient.GetAsync(url);
                 response.EnsureSuccessStatusCode();
                 string jsonResponse = await response.Content.ReadAsStringAsync();
 
@@ -182,13 +206,13 @@ namespace spaceWeatherApi
                     }
                 };
 
-                return JsonConvert.DeserializeObject<List<T>>(jsonResponse, settings) ?? new List<T>();
+                return JsonConvert.DeserializeObject<List<T>>(jsonResponse, settings) ?? [];
             }
             catch (Exception ex)
             {
                 // Log the exception
                 Console.WriteLine($"Error fetching NOAA data: {ex.Message}");
-                return new List<T>();
+                return [];
             }
         }
     }

@@ -1,4 +1,4 @@
-﻿namespace spaceWeatherApi.DataModels
+﻿namespace SpaceWeatherApi.DataModels
 {
     using System;
     using System.Collections.Generic;
