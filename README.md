@@ -1,5 +1,5 @@
 # SpaceWeather
-
+ A small application that allows access to space weather data and reporting upon that data 
 
 ![.Net](https://img.shields.io/badge/.NET-5C2D91?style=for-the-badge&logo=.net&logoColor=white) ![Visual Studio](https://img.shields.io/badge/Visual%20Studio-5C2D91.svg?style=for-the-badge&logo=visual-studio&logoColor=white) ![C#](https://img.shields.io/badge/c%23-%23239120.svg?style=for-the-badge&logo=csharp&logoColor=white)
   ### Tech stack
@@ -12,8 +12,10 @@
   - newtonsoft for json parsing
     
 ## General Information 
-This project uses publically available apis from the DONKI NASA api 
-more information on this and other apis can be found here: https://api.nasa.gov/
+This project uses publically available apis from the DONKI NASA and NOAA 
+more information on this and other apis can be found here
+-  https://api.nasa.gov/
+-  https://www.swpc.noaa.gov/
 
 Check the base controller for more information on specifics on parameters that are accepted
 By default, if no starttime and endtime parameters are supplied then the data coming back will be 30 days worth 
@@ -86,7 +88,7 @@ Currently, only http is configured
 There are two supported data sources from the DONKI NASA API:
 * FLR - Solar flare
 * CME - Coronal mass ejection
-We also get data from NOAA - https://www.swpc.noaa.gov/
+Data from NOAA 
   * Sunspot  
 {endpoint} will be seen around this can be FLR or CME 
 
