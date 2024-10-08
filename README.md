@@ -17,8 +17,7 @@ more information on this and other apis can be found here
 -  https://api.nasa.gov/
 -  https://www.swpc.noaa.gov/
 
-Check the base controller for more information on specifics on parameters that are accepted
-By default, if no starttime and endtime parameters are supplied then the data coming back will be 30 days worth 
+Check the base controller for more information on specifics on parameters that are accepted. By default, if no starttime and endtime parameters are supplied then the data coming back will be 30 days worth 
 Additionally a few shorthands can be used in the starttime parameter:
 "today" will convert to the current date
 "yr" + number, ex: yr1,  will subtract the current data by the number and provide data far back in the archive.  Meaning if you sent in a "yr1" then the past year's worth of data
