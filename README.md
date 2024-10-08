@@ -111,6 +111,7 @@ We also get data from NOAA - https://www.swpc.noaa.gov/
 
 # Data Examples & Resources 
  ## Links
+ - https://kauai.ccmc.gsfc.nasa.gov/DONKI/  - DONKI tool homepage
  - https://ccmc.gsfc.nasa.gov/wsa-dashboard/ - Neat dashboard for solar data visuals 
  - https://ccmc.gsfc.nasa.gov/RoR_WWW/SWREDI/training-for-engineers/Flares_CMEs_SEP.pdf - Flares, CMEs and SEPs
  - https://www.swpc.noaa.gov/ - Space Weather Prediction Center
@@ -118,6 +119,13 @@ We also get data from NOAA - https://www.swpc.noaa.gov/
  - https://celestrak.org/SpaceData/ - Some neat space data
  - https://kauai.ccmc.gsfc.nasa.gov/DONKI/ - Home page the DONKI Api
  - https://www.weather.gov/media/nws/Results-of-the-First-National-Survey-of-User-Needs-for-Space-Weather-2024.pdf  - In dept report of needs for space weather data
+ - https://www.mdpi.com/2674-0346/2/3/12  - Space Weather Effects on Satellites
+ - https://en.wikipedia.org/wiki/List_of_solar_storms - Has a table showcasing the worst storms recorded
+ - https://heartlandhams.org/sfi-number/ - What does Solar Flux mean?
+ - https://solar-center.stanford.edu/SID/activities/flare.html#:~:text=Flares%20classes%20have%20names%3A%20A,strong%20as%20a%20C%20flare. What are the different types, or classes, of flares?
+ - https://celestrak.org/  - Space data tracking tools and library
+ - https://www.swpc.noaa.gov/noaa-scales-explanation - NOAA space weather scales
+ - https://www.swpc.noaa.gov/about-space-weather - Home page with various links to more info for space weather 
 
 
 ## Data examples
