@@ -3,7 +3,7 @@ namespace SpaceWeatherApi.Controllers
 {
     [ApiController]
     [Route("api/{endpoint}/group")]
-    public class GroupController(NasaApiClient nasaApiClient) : BaseController(nasaApiClient)
+    public class GroupController(ApiClient nasaApiClient) : BaseController(nasaApiClient)
     {
         /// <summary>
         /// Get the data grouped by the specified property
@@ -14,9 +14,9 @@ namespace SpaceWeatherApi.Controllers
         /// <param name="endDate"></param>
         /// <returns></returns>
         [HttpGet]
-        public async Task<IActionResult> GetGroupedData(string endpoint, [FromQuery] string property, string? startDate = null, string? endDate = null)
+       public async Task<IActionResult> GetGroupedData(string endpoint, [FromQuery] string property, string? startDate = null, string? endDate = null)
         {
-            var data = await _nasaApiClient.GetDataAsync(endpoint, startDate, endDate);
+            var data = await _ApiClient.GetDataAsync(endpoint, startDate, endDate);
             if (data == null)
             {
                 return StatusCode(500, "Failed to retrieve data.");

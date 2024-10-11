@@ -3,12 +3,9 @@ using System.Reflection;
 
 namespace SpaceWeatherApi.Controllers
 {
-    [ApiController]
-    [Route("api/[controller]")]
-    public abstract class BaseController(NasaApiClient nasaApiClient) : ControllerBase
-    {
-        protected readonly NasaApiClient _nasaApiClient = nasaApiClient;
-
+    public abstract class BaseController(ApiClient ApiClient) : ControllerBase
+    {  //TODO: Go over and check all access modifiers for all classes/methods
+        public readonly ApiClient _ApiClient = ApiClient;
 
         /// <summary>
         /// Order enum for ordering data
@@ -26,7 +23,7 @@ namespace SpaceWeatherApi.Controllers
         /// <param name="data"></param>
         /// <param name="filter"></param>
         /// <returns></returns>
-        protected static List<T> FilterData<T>(List<T> data, string[] filter)
+        public static List<T> FilterData<T>(List<T> data, string[] filter)
         {
             if (filter == null || filter.Length == 0) return data;
             {
@@ -64,7 +61,7 @@ namespace SpaceWeatherApi.Controllers
         /// <param name="property"></param>
         /// <returns></returns>
         /// <exception cref="ArgumentException"></exception>
-        protected static List<object> OrderBy(List<object> data, Order order, string property)
+        public static List<object> OrderBy(List<object> data, Order order, string property)
         {
             if (data == null || data.Count == 0)
             {
@@ -125,7 +122,7 @@ namespace SpaceWeatherApi.Controllers
         /// <param name="data"></param>
         /// <param name="propertyName"></param>
         /// <returns></returns>
-        protected static int CountOfProperty<T>(List<T> data, string propertyName)
+        public static int CountOfProperty<T>(List<T> data, string propertyName)
         {
             if (data == null || data.Count == 0)
             {

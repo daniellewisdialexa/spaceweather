@@ -1,10 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using SpaceWeatherApi;
 namespace SpaceWeatherApi.Controllers
 {
     [ApiController]
     [Route("api/{endpoint}/order")]
-    public class OrderController(NasaApiClient nasaApiClient) : BaseController(nasaApiClient)
+    public class OrderController(ApiClient nasaApiClient) : BaseController(nasaApiClient)
     {
         /// <summary>
         /// Order the data by the given property
@@ -18,7 +17,7 @@ namespace SpaceWeatherApi.Controllers
         [HttpGet]
         public async Task<IActionResult> OrderFlareData(string endpoint,[FromQuery] Order order, string property, string? startDate = null, string? endDate = null)
         {
-            var data = await _nasaApiClient.GetDataAsync(endpoint, startDate, endDate);
+            var data = await _ApiClient.GetDataAsync(endpoint, startDate, endDate);
             if (data == null)
             {
                 return StatusCode(500, "Failed to retrieve data.");

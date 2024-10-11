@@ -3,11 +3,10 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using SpaceWeatherApi.DataModels;
 using System.Globalization;
-using System.Net.Http;
 
 namespace SpaceWeatherApi
 {
-    public class NasaApiClient(HttpClient httpClient, IOptions<AppSettings> appSettings)
+    public class ApiClient(HttpClient httpClient, IOptions<AppSettings> appSettings)
     {
         private readonly HttpClient _httpClient = httpClient;
         private readonly AppSettings _appSettings = appSettings.Value;
@@ -21,14 +20,6 @@ namespace SpaceWeatherApi
             { "CME", typeof(CMEEvent) },
         };
 
-        /// <summary>
-        /// Get all the sunspot data 
-        /// </summary>
-        /// <returns></returns>
-        public async Task<List<SunspotData>> GetAllSunspotDataAsync()
-        {
-            return await GetNOAADataAsync<SunspotData>("sunspot");
-        }
 
         /// <summary>
         /// Fetch data from the DONKI API
@@ -166,20 +157,79 @@ namespace SpaceWeatherApi
         }
 
 
+
+
+       //---- NOAA Data ----\\
+        /// <summary>
+        /// Get all the sunspot data 
+        /// </summary>
+        /// <returns></returns>
+        public async Task<List<SunspotModel>> GetAllSunspotDataAsync()
+        {
+            return await GetNOAADataAsync<SunspotModel>("sunspot");
+        }
+
+        public async Task<FluxModel> GetTodayFluxNum()
+        {
+            return (await GetNOAADataAsync<FluxModel>("fluxtoday")).Single();
+        }
+
+
+        public async Task<List<SolarRegionModel>> GetAllSolarRegionDataAsync()
+        {
+
+            return await GetNOAADataAsync<SolarRegionModel>("solarregion");
+        }
+
+
+       private readonly Dictionary<string, string> _endpointMap = new()
+            {
+                ["sunspot"] = "json/sunspot_report.json",
+                ["solarregion"] = "json/solar_regions.json",
+                ["fluxtoday"] = "products/summary/10cm-flux.json"
+       };
+
         /// <summary>
         /// Get data from the NOAA depending on endpoint
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="endpoint"></param>
         /// <returns></returns>
-        public async Task<List<T>> GetNOAADataAsync<T>(string endpoint)
+
+        public async Task<List<T>> GetNOAADataAsync<T>(string endpoint) where T : class
         {
-            return endpoint switch
+            if (endpoint == "fluxtoday")
             {
-                "sunspot" => await FetchNOAADataAsync<T>("json/sunspot_report.json"),
-                _ => new List<T>()
-            };
+                if (_endpointMap.TryGetValue(endpoint, out var path))
+                {
+                    var result = await FetchSingleNOAADataAsync<T>(path);
+                    return result != null ? [result] : [];
+                }
+            }
+            
+            if (_endpointMap.TryGetValue(endpoint, out var jsonPath))
+            {
+                return await FetchNOAADataAsync<T>(jsonPath);
+            }
+            return [];
         }
+
+
+
+        private async Task<T> FetchSingleNOAADataAsync<T>(string path) where T : class
+        {
+            string baseUrl = _appSettings.ConnectionStrings.NOAABaseURl;
+            string url = new Uri(new Uri(baseUrl), path).ToString();
+
+            HttpResponseMessage response = await _httpClient.GetAsync(url);
+            response.EnsureSuccessStatusCode();
+            string jsonResponse = await response.Content.ReadAsStringAsync();
+
+            return  JsonConvert.DeserializeObject<T>(jsonResponse);
+         
+        }
+
+
 
         /// <summary>
         /// Fetch data from the NOAA API
@@ -215,5 +265,7 @@ namespace SpaceWeatherApi
                 return [];
             }
         }
+
+     
     }
 }

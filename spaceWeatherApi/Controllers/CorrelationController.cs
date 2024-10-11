@@ -7,7 +7,7 @@ namespace SpaceWeatherApi.Controllers
 
     [ApiController]
     [Route("api/report")]
-    public class CorrelationController(NasaApiClient nasaApiClient, FlareAnalyzer flareAnalyzer) : BaseController(nasaApiClient)
+    public class CorrelationController(ApiClient apiClient, FlareAnalyzer flareAnalyzer) : BaseController(apiClient)
     {
         private readonly FlareAnalyzer _flareAnalyzer = flareAnalyzer;
         /// <summary>
@@ -19,8 +19,8 @@ namespace SpaceWeatherApi.Controllers
         [HttpGet("sametime")]
         public async Task<IActionResult> GetCorrelationSameTimeEvents([FromQuery] string? startDate = null, string? endDate = null)
         {
-            var FLRdata = await _nasaApiClient.GetDataAsync("FLR", startDate, endDate) ?? [];
-            var CMEdata = await _nasaApiClient.GetDataAsync("CME", startDate, endDate) ?? [];
+            var FLRdata = await _ApiClient.GetDataAsync("FLR", startDate, endDate) ?? [];
+            var CMEdata = await _ApiClient.GetDataAsync("CME", startDate, endDate) ?? [];
 
             var flareEvents = FLRdata.Cast<FlareEvent>().Where(f => f.BeginTime.HasValue && f.PeakTime.HasValue).ToList();
             var CMEEvents = CMEdata.Cast<CMEEvent>().Where(c => c.StartTime.HasValue).ToList();
@@ -84,8 +84,8 @@ namespace SpaceWeatherApi.Controllers
         [HttpGet("scottplot")]
         public async Task<IActionResult> GetScatterPlot([FromQuery] string? startDate = null, string? endDate = null)
         {
-            var FLRdata = await _nasaApiClient.GetDataAsync("FLR", startDate, endDate) ?? [];
-            var CMEdata = await _nasaApiClient.GetDataAsync("CME", startDate, endDate) ?? [];
+            var FLRdata = await _ApiClient.GetDataAsync("FLR", startDate, endDate) ?? [];
+            var CMEdata = await _ApiClient.GetDataAsync("CME", startDate, endDate) ?? [];
 
             var flareEvents = FLRdata.Cast<FlareEvent>().ToList();
             var CMEEvents = CMEdata.Cast<CMEEvent>().ToList();
@@ -202,6 +202,8 @@ namespace SpaceWeatherApi.Controllers
             return Content(html, "text/html");
         }
 
+
+        //NOTE: Should endpoint methods contain logic? - Move logic to other method?
         /// <summary>
         /// Get interesting solar events
         /// </summary>
@@ -211,8 +213,8 @@ namespace SpaceWeatherApi.Controllers
         [HttpGet("flagged")]
         public async Task<IActionResult> GetFlaggedEvents([FromQuery] string? startDate = null, string? endDate = null)
         {
-            var FLRdata = await _nasaApiClient.GetDataAsync("FLR", startDate, endDate) ?? [];
-            var CMEdata = await _nasaApiClient.GetDataAsync("CME", startDate, endDate) ?? [];
+            var FLRdata = await _ApiClient.GetDataAsync("FLR", startDate, endDate) ?? [];
+            var CMEdata = await _ApiClient.GetDataAsync("CME", startDate, endDate) ?? [];
 
             var flareEvents = FLRdata.Cast<FlareEvent>().ToList();
             var CMEEvents = CMEdata.Cast<CMEEvent>().ToList();

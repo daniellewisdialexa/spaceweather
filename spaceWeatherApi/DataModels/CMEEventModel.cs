@@ -7,19 +7,19 @@
     public class CMEEvent
     {
         [JsonProperty("activityID")]
-        public string ActivityID { get; set; } = string.Empty;
+        public string? ActivityID { get; set; } 
 
         [JsonProperty("catalog")]
-        public string Catalog { get; set; } = string.Empty;
+        public string? Catalog { get; set; } 
 
         [JsonProperty("startTime")]
         public DateTime? StartTime { get; set; }
 
         [JsonProperty("instruments")]
-        public List<Instrument> Instruments { get; set; } = [];
+        public List<Instrument>? Instruments { get; set; }
 
         [JsonProperty("sourceLocation")]
-        public string SourceLocation { get; set; } = string.Empty;
+        public string? SourceLocation { get; set; }
 
         [JsonProperty("activeRegionNum")]
         public int? ActiveRegionNum { get; set; }

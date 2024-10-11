@@ -3,15 +3,15 @@ using SpaceWeatherApi.DataModels;
 
 namespace SpaceWeatherApi.Utils
 {
-    public class FlareAnalyzer
-    {
-        private readonly AppSettings _appSettings;
-        protected readonly NasaApiClient _nasaApiClient;
+    public class FlareAnalyzer  //TODO: Rename to add Util? To help with folder structure
+    { 
+        private readonly AppSettings _appSettings;  //NOTE: Is there a way I can better handle this code? as it is used in many places
+        private readonly ApiClient _apiClient; 
         private readonly Dictionary<char, (double Min, double Max)> _expectedSpeedRangesCollection;
 
-        public FlareAnalyzer(NasaApiClient nasaApiClient, IOptions<AppSettings> appSettings)
+        public FlareAnalyzer(ApiClient nasaApiClient, IOptions<AppSettings> appSettings)
         {
-            _nasaApiClient = nasaApiClient;
+            _apiClient = nasaApiClient;
             _appSettings = appSettings.Value;
             _expectedSpeedRangesCollection = _appSettings.DataValues.ExpectedSpeedRanges
                 .ToDictionary(kvp => kvp.Key[0], kvp => (kvp.Value.Min, kvp.Value.Max));
@@ -112,7 +112,7 @@ namespace SpaceWeatherApi.Utils
         /// <param name="flare"></param>
         /// <param name="allSunspotData"></param>
         /// <returns></returns>
-        private static SunspotData? FindRelevantSunspotData(FlareEvent flare, List<SunspotData> allSunspotData)
+        private static SunspotModel? FindRelevantSunspotData(FlareEvent flare, List<SunspotModel> allSunspotData)
         {
             if (flare == null || allSunspotData == null || flare.ActiveRegionNum == null)
             {
@@ -123,18 +123,24 @@ namespace SpaceWeatherApi.Utils
             string flareRegion = flare.ActiveRegionNum.ToString() ?? "";
 
             var relevantSunspots = allSunspotData
-             .Where(s => s.Region != null &&
-                 !string.IsNullOrEmpty(s.Region.ToString()) &&
-                 flareRegion.Contains(s.Region.ToString() ?? ""))
-              .ToList();
+                .Where(s => s.Region != null &&
+                    !string.IsNullOrEmpty(s.Region.ToString()) &&
+                    flareRegion.Contains(s.Region.ToString() ?? ""))
+                .ToList();
 
-        
+            if (relevantSunspots.Count == 0 || flare.BeginTime == null)
+            {
+                return null;
+            }
+
             var closestSunspot = relevantSunspots
-                .OrderBy(s => Math.Abs((s.TimeTag - flare.BeginTime!.Value).TotalMinutes))
-                .First();
+                .Where(s => s.TimeTag.HasValue)
+                .OrderBy(s => Math.Abs((s.TimeTag!.Value - flare.BeginTime.Value).TotalMinutes))
+                .FirstOrDefault();
 
             return closestSunspot;
         }
+    
 
 
 
@@ -143,7 +149,7 @@ namespace SpaceWeatherApi.Utils
         /// </summary>
         /// <param name="sunspotData"></param>
         /// <returns></returns>
-        private static double CalculateSunspotFactor(SunspotData sunspotData)
+        private static double CalculateSunspotFactor(SunspotModel sunspotData)
         {
             if (sunspotData == null) return 1.0;
 
@@ -153,7 +159,7 @@ namespace SpaceWeatherApi.Utils
 
             double classFactor = sunspotData.SpotClass.StartsWith("A") ? 0.5 :
                                  sunspotData.SpotClass.StartsWith("B") ? 1.0 :
-                                 sunspotData.SpotClass.StartsWith("C") ? 1.5 : 2.0;
+                                 sunspotData.SpotClass.StartsWith("C") ? 1.5 : 2.0; //TODO: update per intellsense 
 
             double magFactor = sunspotData.MagClass == "A" ? 0.5 :
                                sunspotData.MagClass == "B" ? 1.0 : 1.5;
@@ -173,7 +179,7 @@ namespace SpaceWeatherApi.Utils
         /// <param name="flare"></param>
         /// <param name="cmeSpeed"></param>
         /// <returns></returns>
-        private Task<double> CalculateSurpriseFactor(FlareEvent flare, double cmeSpeed ,SunspotData allSunspotData)
+        private Task<double> CalculateSurpriseFactor(FlareEvent flare, double cmeSpeed ,SunspotModel allSunspotData)
         {
             if (string.IsNullOrEmpty(flare.ClassType) || flare.ClassType.Length < 2)
                 return Task.FromResult<double>(0);
@@ -218,7 +224,7 @@ namespace SpaceWeatherApi.Utils
         {
             var interestingEvents = new List<InterestingEvent>();
             var validFlares = flareEvents.Where(f => f.BeginTime != null && !string.IsNullOrEmpty(f.ClassType)).ToList();
-            var allSunspotData = await _nasaApiClient.GetAllSunspotDataAsync();
+            var allSunspotData = await _apiClient.GetAllSunspotDataAsync();
 
             foreach (var flare in validFlares)
             {
@@ -240,7 +246,7 @@ namespace SpaceWeatherApi.Utils
                 foreach (var cme in associatedCMEs)
                 {
                     double cmeSpeed = CalculateCMESpeed(cme);
-                    var relevantSunspotData = FindRelevantSunspotData(flare, allSunspotData) ?? new SunspotData();
+                    var relevantSunspotData = FindRelevantSunspotData(flare, allSunspotData) ?? new SunspotModel();
                     var surpriseFactor = await CalculateSurpriseFactor(flare, cmeSpeed, relevantSunspotData);
                     double confidence = CalculateConfidenceLevel(flare, cme);
 
@@ -330,7 +336,7 @@ namespace SpaceWeatherApi.Utils
         /// <param name="confidence"></param>
         /// <param name="allSunspotData"></param>
         /// <returns></returns>
-        private string DetermineReason(FlareEvent flare, CMEEvent cme, double cmeSpeed, double surpriseFactor, double confidence, SunspotData allSunspotData)
+        private string DetermineReason(FlareEvent flare, CMEEvent cme, double cmeSpeed, double surpriseFactor, double confidence, SunspotModel allSunspotData)
         {
 
             string surpriseDescription = surpriseFactor switch
