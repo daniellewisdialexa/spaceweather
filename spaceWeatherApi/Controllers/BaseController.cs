@@ -1,11 +1,25 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using SpaceWeatherApi.Utils;
 using System.Reflection;
 
 namespace SpaceWeatherApi.Controllers
 {
-    public abstract class BaseController(ApiClient ApiClient) : ControllerBase
-    {  //TODO: Go over and check all access modifiers for all classes/methods
-        public readonly ApiClient _ApiClient = ApiClient;
+    public abstract class BaseController(
+    IApiClient apiClient,
+    FlareAnalyzer? flareAnalyzer = null,
+    DataUtils? dataUtils = null,
+    DateParseUtils? dateUtils = null,
+    SolarReportingUtils? solarReportingUtils = null,
+    SpaceWeatherReportingUtils? spaceWeatherReportingUtils = null
+) : ControllerBase
+    {
+        protected readonly IApiClient ApiClient = apiClient;
+        protected readonly FlareAnalyzer? FlareAnalyzer = flareAnalyzer;
+        protected readonly DataUtils? DataUtils = dataUtils;
+        protected readonly DateParseUtils? DateUtils = dateUtils;
+        protected readonly SolarReportingUtils? SolarReportingUtils = solarReportingUtils;
+        protected readonly SpaceWeatherReportingUtils? SpaceWeatherReportingUtils = spaceWeatherReportingUtils;
+
 
         /// <summary>
         /// Order enum for ordering data

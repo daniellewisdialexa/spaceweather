@@ -1,18 +1,17 @@
-﻿using Microsoft.Extensions.Options;
-using SpaceWeatherApi.DataModels;
+﻿using SpaceWeatherApi.DataModels;
 
 namespace SpaceWeatherApi.Utils
 {
-    public class FlareAnalyzer  //TODO: Rename to add Util? To help with folder structure
-    { 
-        private readonly AppSettings _appSettings;  //NOTE: Is there a way I can better handle this code? as it is used in many places
-        private readonly ApiClient _apiClient; 
+    public class FlareAnalyzer
+    {
+        private readonly IApiClient _apiClient;
+        private readonly IAppSettings _appSettings;
         private readonly Dictionary<char, (double Min, double Max)> _expectedSpeedRangesCollection;
 
-        public FlareAnalyzer(ApiClient nasaApiClient, IOptions<AppSettings> appSettings)
+        public FlareAnalyzer(IApiClient apiClient, IAppSettings appSettings)
         {
-            _apiClient = nasaApiClient;
-            _appSettings = appSettings.Value;
+            _apiClient = apiClient;
+            _appSettings = appSettings;
             _expectedSpeedRangesCollection = _appSettings.DataValues.ExpectedSpeedRanges
                 .ToDictionary(kvp => kvp.Key[0], kvp => (kvp.Value.Min, kvp.Value.Max));
         }
@@ -23,8 +22,7 @@ namespace SpaceWeatherApi.Utils
         /// </summary>
         /// <param name="flare"></param>
         /// <param name="allCMEs"></param>
-        /// <returns></returns>
-
+        /// <returns>List of cme events</returns>
         private List<CMEEvent> GetAssociatedCMEs(FlareEvent flare, List<CMEEvent> allCMEs)
         {
             var timeWindow = TimeSpan.FromHours(_appSettings.DataValues.CME_ASSOCIATION_WINDOW_HOURS);
@@ -45,7 +43,7 @@ namespace SpaceWeatherApi.Utils
         /// </summary>
         /// <param name="flare"></param>
         /// <param name="cme"></param>
-        /// <returns></returns>
+        /// <returns>Calculated confidence number</returns>
         private static double CalculateConfidenceLevel(FlareEvent flare, CMEEvent? cme)
         {
             double confidence = 1.0;
@@ -81,7 +79,7 @@ namespace SpaceWeatherApi.Utils
         /// Calculates the speed of the given CME event. If no speed is available, returns 0.0.
         /// </summary>
         /// <param name="cme"></param>
-        /// <returns></returns>
+        /// <returns>Calculated speed of cme number</returns>
         private static double CalculateCMESpeed(CMEEvent cme)
         {
             if (cme.CMEAnalyses != null && cme.CMEAnalyses.Count != 0)
@@ -111,7 +109,7 @@ namespace SpaceWeatherApi.Utils
         /// </summary>
         /// <param name="flare"></param>
         /// <param name="allSunspotData"></param>
-        /// <returns></returns>
+        /// <returns>Relevant sunpot</returns>
         private static SunspotModel? FindRelevantSunspotData(FlareEvent flare, List<SunspotModel> allSunspotData)
         {
             if (flare == null || allSunspotData == null || flare.ActiveRegionNum == null)
@@ -140,7 +138,7 @@ namespace SpaceWeatherApi.Utils
 
             return closestSunspot;
         }
-    
+
 
 
 
@@ -148,24 +146,32 @@ namespace SpaceWeatherApi.Utils
         /// Calculates the sunspot factor for the given sunspot data.
         /// </summary>
         /// <param name="sunspotData"></param>
-        /// <returns></returns>
+        /// <returns> Calcuated spot factor number </returns>
         private static double CalculateSunspotFactor(SunspotModel sunspotData)
         {
             if (sunspotData == null) return 1.0;
 
-
             double areaFactor = sunspotData.Area / 100.0; // Normalize area
             double spotFactor = sunspotData.NumSpot / 10.0; // Normalize number of spots
 
-            double classFactor = sunspotData.SpotClass.StartsWith("A") ? 0.5 :
-                                 sunspotData.SpotClass.StartsWith("B") ? 1.0 :
-                                 sunspotData.SpotClass.StartsWith("C") ? 1.5 : 2.0; //TODO: update per intellsense 
+            double classFactor = sunspotData.SpotClass switch
+            {
+                string s when s.Length > 0 && s[0] == 'A' => 0.5,
+                string s when s.Length > 0 && s[0] == 'B' => 1.0,
+                string s when s.Length > 0 && s[0] == 'C' => 1.5,
+                _ => 2.0
+            };
 
-            double magFactor = sunspotData.MagClass == "A" ? 0.5 :
-                               sunspotData.MagClass == "B" ? 1.0 : 1.5;
+                double magFactor = sunspotData.MagClass switch
+            {
+                "A" => 0.5,
+                "B" => 1.0,
+                _ => 1.5
+            };
 
             return (1 + areaFactor + spotFactor) * classFactor * magFactor;
         }
+
 
 
 
@@ -178,7 +184,7 @@ namespace SpaceWeatherApi.Utils
         /// </summary>
         /// <param name="flare"></param>
         /// <param name="cmeSpeed"></param>
-        /// <returns></returns>
+        /// <returns> Calcluated Suprise factor number </returns>
         private Task<double> CalculateSurpriseFactor(FlareEvent flare, double cmeSpeed ,SunspotModel allSunspotData)
         {
             if (string.IsNullOrEmpty(flare.ClassType) || flare.ClassType.Length < 2)
@@ -219,7 +225,7 @@ namespace SpaceWeatherApi.Utils
         /// <param name="flareEvents"></param>
         /// <param name="cmeEvents"></param>
         /// <param name="timeWindow"></param>
-        /// <returns></returns>
+        /// <returns>A list of events that might be interesting</returns>
         public async Task<List<InterestingEvent>> AnalyzeEventsAsync(List<FlareEvent> flareEvents, List<CMEEvent> cmeEvents)
         {
             var interestingEvents = new List<InterestingEvent>();
@@ -278,7 +284,7 @@ namespace SpaceWeatherApi.Utils
         /// </summary>
         /// <param name="coordinate"></param>
         /// <param name="isLatitude"></param>
-        /// <returns></returns>
+        /// <returns>Formated coordinates</returns>
         private static string FormatLatLong(double coordinate, bool isLatitude)
         {
             char direction = isLatitude ? (coordinate >= 0 ? 'N' : 'S') : (coordinate >= 0 ? 'E' : 'W');
@@ -295,7 +301,7 @@ namespace SpaceWeatherApi.Utils
         /// Format the given angle
         /// </summary>
         /// <param name="angle"></param>
-        /// <returns></returns>
+        /// <returns>Fromated angle coordinate</returns>
         private static string FormatAngle(double angle)
         {
             angle = Math.Abs(angle); // Ensure angle is positive
@@ -311,7 +317,7 @@ namespace SpaceWeatherApi.Utils
         /// Get the description of the given magnetic class.
         /// </summary>
         /// <param name="magClass"></param>
-        /// <returns></returns>
+        /// <returns>String description of magnetic class</returns>
         private string GetMagneticClassDescription(string magClass)
         {
             if (string.IsNullOrEmpty(magClass))
@@ -335,7 +341,7 @@ namespace SpaceWeatherApi.Utils
         /// <param name="surpriseFactor"></param>
         /// <param name="confidence"></param>
         /// <param name="allSunspotData"></param>
-        /// <returns></returns>
+        /// <returns>String for determined reason of surprised factor</returns>
         private string DetermineReason(FlareEvent flare, CMEEvent cme, double cmeSpeed, double surpriseFactor, double confidence, SunspotModel allSunspotData)
         {
 
@@ -429,7 +435,7 @@ namespace SpaceWeatherApi.Utils
                 reason += "\n- No detailed CME analysis available";
             }
 
-            // Note about the speed used in calculations
+            // Notes for the speed used in calculations
             reason += $"\n\nSpeed used in calculations: {cmeSpeed:F1} km/s";
 
 
@@ -447,8 +453,8 @@ namespace SpaceWeatherApi.Utils
                 reason += $"\n- Region: {allSunspotData.Region}";
                 reason += $"\n- Area: {allSunspotData.Area} millionths of solar hemisphere";
                 reason += $"\n- Number of Spots: {allSunspotData.NumSpot}";
-                reason += $"\n- Spot Class: {allSunspotData.SpotClass ?? "Unknown"}";
-                reason += $"\n- Magnetic Class: {GetMagneticClassDescription(allSunspotData.MagClass)?? "Unknown"}; ";
+                reason += $"\n- Spot DataUtils: {allSunspotData.SpotClass ?? "Unknown"}";
+                reason += $"\n- Magnetic DataUtils: {GetMagneticClassDescription(allSunspotData.MagClass)?? "Unknown"}; ";
                 reason += $"\n- Latitude: {FormatLatLong(Convert.ToDouble(allSunspotData.Latitude), true)}";
                 reason += $"\n- Longitude: {FormatLatLong(Convert.ToDouble(allSunspotData.Longitude), false)}";
 
