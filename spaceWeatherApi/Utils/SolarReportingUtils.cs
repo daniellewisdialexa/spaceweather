@@ -2,17 +2,28 @@
 using SpaceWeatherApi.DataModels;
 namespace SpaceWeatherApi.Utils
 {
-
     public class SolarReportingUtils
     {
+
+        /// <summary>
+        /// Generate a solar region report from the given solar region data and sunspot data.
+        /// </summary>
+        /// <param name="allSolarRegionData"></param>
+        /// <param name="allSunspotData"></param>
+        /// <returns>List of solar region data ordered by the date observed</returns>
         public List<SolarRegionReportItem> GenerateSolarRegionReport(List<SolarRegionModel> allSolarRegionData, List<SunspotModel> allSunspotData)
         {
-            return allSolarRegionData
+            return [.. allSolarRegionData
                 .Select(sr => CreateSolarRegionReportItem(sr, allSunspotData))
-                .OrderByDescending(r => r.ObservedDate)
-                .ToList();
+                .OrderByDescending(r => r.ObservedDate)];
         }
 
+        /// <summary>
+        /// Create a solar region report item from the given solar region and sunspot data.
+        /// </summary>
+        /// <param name="solarRegion"></param>
+        /// <param name="allSunspotData"></param>
+        /// <returns></returns>
         private static SolarRegionReportItem CreateSolarRegionReportItem(SolarRegionModel solarRegion, List<SunspotModel> allSunspotData)
         {
             var matchingSunspots = GetMatchingSunspots(solarRegion.Region, allSunspotData);
@@ -27,6 +38,12 @@ namespace SpaceWeatherApi.Utils
             };
         }
 
+        /// <summary>
+        /// Get the matching sunspots for the given region.
+        /// </summary>
+        /// <param name="region"></param>
+        /// <param name="allSunspotData"></param>
+        /// <returns>List of matching sunspots</returns>
         private static List<SunspotReportItem> GetMatchingSunspots(int? region, List<SunspotModel> allSunspotData)
         {
             return allSunspotData
@@ -40,22 +57,5 @@ namespace SpaceWeatherApi.Utils
                 .ToList();
         }
 
-    }
-
-    public class SolarRegionReportItem
-    {
-        public DateTime? ObservedDate { get; set; }
-        public int? Region { get; set; }
-        public double? NumberSpots { get; set; }
-        public string? SpotClass { get; set; }
-        public DateTime? FirstDate { get; set; }
-        public List<SunspotReportItem>? MatchingSunspots { get; set; }
-    }
-
-    public class SunspotReportItem
-    {
-        public string? Obsdate { get; set; }
-        public double? NumSpot { get; set; }
-        public string? SpotClass { get; set; }
     }
 }

@@ -5,17 +5,34 @@ namespace SpaceWeatherApi.Utils
 {
     public class SpaceWeatherReportingUtils
     {
+        /// <summary>
+        /// Generate the space weather report
+        /// </summary>
+        /// <param name="allSolarRegionData"></param>
+        /// <param name="allSunspotData"></param>
+        /// <param name="allFlareEvents"></param>
+        /// <param name="allCMEEvents"></param>
+        /// <param name="fluxData"></param>
+        /// <returns>Returns generated report</returns>
         public string GenerateSpaceWeatherReport(
-       List<SolarRegionModel> allSolarRegionData,
-       List<SunspotModel> allSunspotData,
-       List<FlareEvent> allFlareEvents,
-       List<CMEEvent> allCMEEvents,
-       FluxModel fluxData)
+           List<SolarRegionModel> allSolarRegionData,
+           List<SunspotModel> allSunspotData,
+           List<FlareEvent> allFlareEvents,
+           List<CMEEvent> allCMEEvents,
+           FluxModel fluxData)
         {
             var report = GenerateRegionReportModel(allSolarRegionData, allSunspotData, allFlareEvents, allCMEEvents);
             return FormatTextReport(report, fluxData);
         }
 
+        /// <summary>
+        /// Generate the region report model
+        /// </summary>
+        /// <param name="allSolarRegionData"></param>
+        /// <param name="allSunspotData"></param>
+        /// <param name="allFlareEvents"></param>
+        /// <param name="allCMEEvents"></param>
+        /// <returns>Returns region report</returns>
         private List<RegionReportModel> GenerateRegionReportModel(
             List<SolarRegionModel> allSolarRegionData,
             List<SunspotModel> allSunspotData,
@@ -47,6 +64,14 @@ namespace SpaceWeatherApi.Utils
             return report;
         }
 
+
+        /// <summary>
+        /// Calculate the sunspots for a region and date range
+        /// </summary>
+        /// <param name="allSunspotData"></param>
+        /// <param name="region"></param>
+        /// <param name="startDate"></param>
+        /// <returns>Returns a list of all the sunspots, added together, for each region </returns>
         private static double CalculateSunspots(List<SunspotModel> allSunspotData, int? region, DateTime startDate)
         {
             return allSunspotData
@@ -54,7 +79,14 @@ namespace SpaceWeatherApi.Utils
                 .Sum(ss => ss.NumSpot);
         }
 
-        private List<FlareEvent> GetSignificantFlares(List<FlareEvent> allFlareEvents, int? region, DateTime startDate)
+        /// <summary>
+        /// Get the most significant flares for a region and date range
+        /// </summary>
+        /// <param name="allFlareEvents"></param>
+        /// <param name="region"></param>
+        /// <param name="startDate"></param>
+        /// <returns>Returns a list of the flares that are m or x class for each region</returns>
+        private static List<FlareEvent> GetSignificantFlares(List<FlareEvent> allFlareEvents, int? region, DateTime startDate)
         {
             return allFlareEvents
                 .Where(f =>
@@ -66,7 +98,14 @@ namespace SpaceWeatherApi.Utils
                 .ToList();
         }
 
-        private int CountCMEs(List<CMEEvent> allCMEEvents, int? region, DateTime startDate)
+        /// <summary>
+        /// Count the CMEs for a region and date range
+        /// </summary>
+        /// <param name="allCMEEvents"></param>
+        /// <param name="region"></param>
+        /// <param name="startDate"></param>
+        /// <returns>Returns a list of counted cmes for each region</returns>
+        private static int CountCMEs(List<CMEEvent> allCMEEvents, int? region, DateTime startDate)
         {
             return allCMEEvents.Count(c =>
             {
@@ -97,7 +136,12 @@ namespace SpaceWeatherApi.Utils
                 });
             }
         }
-
+        /// <summary>
+        /// Handles text report formating
+        /// </summary>
+        /// <param name="report"></param>
+        /// <param name="fluxData"></param>
+        /// <returns>Returns a text report</returns>
         private static string FormatTextReport(List<RegionReportModel> report, FluxModel fluxData)
         {
             var textReport = new StringBuilder();
@@ -128,7 +172,13 @@ namespace SpaceWeatherApi.Utils
             return textReport.ToString();
         }
 
-
+        /// <summary>
+        /// Helps determine the activity trend of the sunspots, flares, and cmes
+        /// </summary>
+        /// <param name="sunspots"></param>
+        /// <param name="flares"></param>
+        /// <param name="cmes"></param>
+        /// <returns>returns a score for each data point</returns>
         private static string DetermineActivityTrend(double sunspots, int flares, int cmes)
         {
             var activityScore = sunspots + flares * 10 + cmes * 5;

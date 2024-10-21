@@ -71,7 +71,9 @@ namespace SpaceWeatherApi.Utils
             return correlatedEvents;
         }
 
-
+        /// <summary>
+        /// Provides a simple object to store correlated solar events
+        /// </summary>
         public class CorrelatedEvent
         {
             public string? FlareClassType { get; set; }

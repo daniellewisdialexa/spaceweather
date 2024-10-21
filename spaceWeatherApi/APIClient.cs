@@ -141,8 +141,10 @@ namespace SpaceWeatherApi
             return await GetNOAADataAsync<SolarRegionModel>("solarregion");
         }
 
-
-       private readonly Dictionary<string, string> _endpointMap = new()
+        /// <summary>
+        /// Maps the endpoint to the respective NOAA API path
+        /// </summary>
+        private readonly Dictionary<string, string> _endpointMap = new()
             {
                 ["sunspot"] = "json/sunspot_report.json",
                 ["solarregion"] = "json/solar_regions.json",
@@ -154,7 +156,7 @@ namespace SpaceWeatherApi
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="endpoint"></param>
-        /// <returns></returns>
+        /// <returns>NOAA data</returns>
         public async Task<List<T>> GetNOAADataAsync<T>(string endpoint) where T : class
         {
             if (!_endpointMap.TryGetValue(endpoint, out var path))
@@ -194,13 +196,12 @@ namespace SpaceWeatherApi
         }
 
 
-
         /// <summary>
         /// Fetch data from the NOAA API
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="endpoint"></param>
-        /// <returns></returns>
+        /// <returns>NOAA json data</returns>
         public async Task<List<T>> FetchNOAADataAsync<T>(string endpoint)
         {
             try
