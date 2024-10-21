@@ -5,11 +5,12 @@
   ### Tech stack
   - C# 12
   - DotNet 8
-  
+
   ### Dependencies 
   All can be installed via Nuget
   - Scottplot for scatter plots (https://scottplot.net/) 
   - newtonsoft for json parsing
+  - Nunity for testing
     
 ## General Information 
 This project uses publically available apis from the DONKI NASA and NOAA 
@@ -133,6 +134,15 @@ Data from NOAA
  - https://www.swpc.noaa.gov/about-space-weather - Home page with various links to more info for space weather 
 
 
+## Tests
+- Make sure to install the Nunit nuget packages (Nunit, Nunit test adapter and Nunit Analyzers) 
+- Once their installed tests can be ran inside the test explorer or through the command line  using ```dotnet test --logger:html```
+     - Logger:HTMl can be changed to any supported format such as XML however HTML provides a cleaner easier to access report
+
+HTML test report exmaple
+
+![image](https://github.com/user-attachments/assets/f2406f19-5b2d-488c-8115-5dd5652050c2)
+
 ## Data examples
 
 Below is a excerpt from the Same time report (report/sametime) that helps correlate high speed CMEs to high intensity FLRs 
@@ -194,5 +204,4 @@ Interesting events report example
 Solar Weather Report example 
 
 ![image](https://github.com/user-attachments/assets/88d7caec-c9f4-4bf6-ba83-c0852c6e6b32)
-
 
