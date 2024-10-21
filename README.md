@@ -1,5 +1,5 @@
 # SpaceWeather
- A small application that allows access to space weather data and reporting upon that data 
+ A small application that allows access to space weather data and provides some reporting upon that data 
 
 ![.Net](https://img.shields.io/badge/.NET-5C2D91?style=for-the-badge&logo=.net&logoColor=white) ![Visual Studio](https://img.shields.io/badge/Visual%20Studio-5C2D91.svg?style=for-the-badge&logo=visual-studio&logoColor=white) ![C#](https://img.shields.io/badge/c%23-%23239120.svg?style=for-the-badge&logo=csharp&logoColor=white)
   ### Tech stack
@@ -77,7 +77,7 @@ App settings json
 
   },
   "IdentitySettings": {
-    "ApiKey": "your key here"
+    "ApiKey": "your api key here"
   }
  }
 ```
@@ -99,7 +99,7 @@ Data from NOAA
 ## Order Controller
 - api/{endpoint}/order - Order data (ASC/DESC) by specific property
 
-## Group Controller 4
+## Group Controller 
 - api/{endpoint}/group  - Group data by specific property
 
 ## Filter Controller 
@@ -108,7 +108,11 @@ Data from NOAA
 ## Correlation Controller
 - api/report/sametime  - Get report of FLR and CME event data that happened nearly at the same time
 - api/report/scottplot  - Get a visual of the CME and FLR data on a scatter plot that maps the intensity of the FLR to the speed of the CME, displays in html
-- /api/report/flagged - Get back a list of events, in text format, that are interesting, High intensity flares with slow CMEs, Low Intensity flares with fast CMEs, Flares with no CMEs
+- api/report/flagged - Get back a list of events, in text format, that are interesting, High intensity flares with slow CMEs, Low Intensity flares with fast CMEs, Flares with no CMEs
+
+## SolarReport Controller
+- api/sr/solarregionreport - Get a list of all matching per region
+- api/sr/swa - Get a text report of solar activity per region including if a status of how active that region is
 
 # Data Examples & Resources 
  ## Links
@@ -187,5 +191,7 @@ This image comes from the scatter plot report (report/scottplot)
 Interesting events report example
 ![image](https://github.com/user-attachments/assets/08d9f813-4e30-42a7-b8c6-060daad1191a)
 
+Solar Weather Report example 
+![image](https://github.com/user-attachments/assets/88d7caec-c9f4-4bf6-ba83-c0852c6e6b32)
 
 
