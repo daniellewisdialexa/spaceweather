@@ -192,6 +192,7 @@ Interesting events report example
 ![image](https://github.com/user-attachments/assets/08d9f813-4e30-42a7-b8c6-060daad1191a)
 
 Solar Weather Report example 
+
 ![image](https://github.com/user-attachments/assets/88d7caec-c9f4-4bf6-ba83-c0852c6e6b32)
 
 
