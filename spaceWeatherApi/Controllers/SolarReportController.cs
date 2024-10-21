@@ -5,7 +5,7 @@ using System.Text;
 namespace SpaceWeatherApi.Controllers
 {
     [ApiController]
-    [Route("api/report")]
+    [Route("api/sr")]
     public class SolarReportController(
         IApiClient apiClient,
         SolarReportingUtils solarReportingUtils,
