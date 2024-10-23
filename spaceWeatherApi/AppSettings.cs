@@ -2,7 +2,15 @@
 
 namespace SpaceWeatherApi
 {
-    public class AppSettings
+    public interface IAppSettings
+    {
+        ConnectionStrings ConnectionStrings { get; }
+        IdentitySettings IdentitySettings { get; }
+        DataValues DataValues { get; }
+    }
+
+
+    public class AppSettings : IAppSettings
     {
         public ConnectionStrings ConnectionStrings { get; set; }
         public IdentitySettings IdentitySettings { get; set; }
@@ -21,7 +29,6 @@ namespace SpaceWeatherApi
         public string DONKIBaseURL { get; set; } = string.Empty;
         public string NOAABaseURl { get; set; } = string.Empty;
     }
-
 
     public class IdentitySettings
     {
