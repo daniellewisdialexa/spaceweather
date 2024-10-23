@@ -1,19 +1,15 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SpaceWeatherApi.DataModels;
-using SpaceWeatherApi.Utils;
-using System.Text;
+using SpaceWeatherApi.Services.Interfaces;
 namespace SpaceWeatherApi.Controllers
 {
     [ApiController]
     [Route("api/sr")]
     public class SolarReportController(
         IApiClient apiClient,
-        SolarReportingUtils solarReportingUtils,
-        SpaceWeatherReportingUtils spaceWeatherReportingUtils)
-       : BaseController(
-           apiClient,
-           solarReportingUtils: solarReportingUtils,
-           spaceWeatherReportingUtils: spaceWeatherReportingUtils)
+        ISolarReportingService solarReportingService,
+        ISpaceWeatherService spaceWeatherService
+        ) : BaseController(apiClient)
     {
         private async Task<(List<SolarRegionModel>, List<SunspotModel>)> FetchSolarDataAsync()
         {
@@ -37,7 +33,7 @@ namespace SpaceWeatherApi.Controllers
                 return NotFound("No solar region data available.");
             }
 
-            var report = SolarReportingUtils?.GenerateSolarRegionReport(allSolarRegionData, allSunspotData);
+            var report = solarReportingService?.GenerateSolarRegionReport(allSolarRegionData, allSunspotData);
             return report != null ? Ok(report) : StatusCode(500, "SolarReportingUtils is not initialized.");
         }
 
@@ -60,8 +56,8 @@ namespace SpaceWeatherApi.Controllers
 
             var fluxData = await ApiClient.GetTodayFluxNum();
 
-           return SpaceWeatherReportingUtils != null
-        ? Content(SpaceWeatherReportingUtils.GenerateSpaceWeatherReport(
+           return spaceWeatherService != null
+        ? Content(spaceWeatherService.GenerateSpaceWeatherReport(
             allSolarRegionData,
             allSunspotData,
             allFlareEvents,

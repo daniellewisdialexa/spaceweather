@@ -5,8 +5,7 @@ namespace SpaceWeatherApi.Utils
 
     public class DataUtils
     {
-        
-
+       
         /// <summary>
         /// Create a detailed report of correlated solar events
         /// </summary>
@@ -49,24 +48,47 @@ namespace SpaceWeatherApi.Utils
         /// <param name="CMEdata"></param>
         /// <returns> List of objects</returns>
 
-        public List<object> FindDetailedCorralatedEvents(List<object> FLRdata, List<object> CMEdata)
+        public List<object> FindDetailedCorrelatedEvents(List<object> FLRdata, List<object> CMEdata)
         {
-
-            var flareEvents = FLRdata.Cast<FlareEvent>().Where(f => f.BeginTime.HasValue && f.PeakTime.HasValue).ToList();
-            var CMEEvents = CMEdata.Cast<CMEEvent>().Where(c => c.StartTime.HasValue).ToList();
-
-
-            TimeSpan timeVariation = TimeSpan.FromMinutes(5); // 5 minutes for a slightly wider window
-            TimeSpan maxFlareDuration = TimeSpan.FromHours(2); // Maximum flare duration
-
-            var correlatedEvents = flareEvents
-                .SelectMany(flare => CMEEvents
-                    .Where(cme => flare.BeginTime.HasValue && flare.PeakTime.HasValue && cme.StartTime.HasValue &&
-                                  (cme.StartTime.Value >= flare.BeginTime.Value - timeVariation &&
-                                   cme.StartTime.Value <= flare.PeakTime.Value + timeVariation) &&
-                                  (flare.PeakTime.Value - flare.BeginTime.Value) <= maxFlareDuration)
-                    .Select(cme => CreateDetailedCorrelatedEventReport(flare, cme)))
+            // Convert and filter input data
+            var flareEvents = FLRdata.Cast<FlareEvent>()
+                .Where(f => f.BeginTime.HasValue && f.PeakTime.HasValue)
                 .ToList();
+
+            var CMEEvents = CMEdata.Cast<CMEEvent>()
+                .Where(c => c.StartTime.HasValue)
+                .ToList();
+
+            // Define time constraints
+            TimeSpan timeVariation = TimeSpan.FromMinutes(5);
+            TimeSpan maxFlareDuration = TimeSpan.FromHours(2);
+
+            var correlatedEvents = new List<object>();
+
+            foreach (var flare in flareEvents)
+            {
+                if (!flare.BeginTime.HasValue || !flare.PeakTime.HasValue)
+                    continue; 
+
+                var flareDuration = flare.PeakTime.Value - flare.BeginTime.Value;
+                if (flareDuration > maxFlareDuration)
+                    continue;
+
+                var correlationStartTime = flare.BeginTime.Value - timeVariation;
+                var correlationEndTime = flare.PeakTime.Value + timeVariation;
+
+                var potentiallyCorrelatedCMEs = CMEEvents.Where(cme =>
+                    cme.StartTime.HasValue &&
+                    cme.StartTime.Value >= correlationStartTime &&
+                    cme.StartTime.Value <= correlationEndTime
+                );
+
+                foreach (var cme in potentiallyCorrelatedCMEs)
+                {
+                    var detailedReport = CreateDetailedCorrelatedEventReport(flare, cme);
+                    correlatedEvents.Add(detailedReport);
+                }
+            }
 
             return correlatedEvents;
         }
@@ -88,21 +110,40 @@ namespace SpaceWeatherApi.Utils
         /// <returns>CorrelatedEvent list</returns>
         public List<CorrelatedEvent> FindCorrelatedEvents(List<object> FLRdata, List<object> CMEdata)
         {
+            // Convert input data to specific types
             var flareEvents = FLRdata.Cast<FlareEvent>().ToList();
             var CMEEvents = CMEdata.Cast<CMEEvent>().ToList();
 
+            // Define the time window for correlation
             TimeSpan timeWindow = TimeSpan.FromMinutes(30);
 
-            var correlatedEvents = flareEvents
-                .SelectMany(flare => CMEEvents
-                    .Where(cme => cme.StartTime.HasValue && flare.BeginTime.HasValue &&
-                                  Math.Abs((cme.StartTime.Value - flare.BeginTime.Value).TotalMinutes) <= timeWindow.TotalMinutes)
-                    .Select(cme => new CorrelatedEvent
+            var correlatedEvents = new List<CorrelatedEvent>();
+
+            foreach (var flare in flareEvents)
+            {
+                if (!flare.BeginTime.HasValue)
+                    continue;
+
+                var flareBeginTime = flare.BeginTime.Value;
+                var correlationStartTime = flareBeginTime - timeWindow;
+                var correlationEndTime = flareBeginTime + timeWindow;
+
+                var potentiallyCorrelatedCMEs = CMEEvents.Where(cme =>
+                    cme.StartTime.HasValue &&
+                    cme.StartTime.Value >= correlationStartTime &&
+                    cme.StartTime.Value <= correlationEndTime
+                );
+
+                foreach (var cme in potentiallyCorrelatedCMEs)
+                {
+                    var correlatedEvent = new CorrelatedEvent
                     {
                         FlareClassType = flare.ClassType,
                         CMESpeeds = cme.CMEAnalyses.Select(analysis => analysis.Speed).ToList()
-                    }))
-                .ToList();
+                    };
+                    correlatedEvents.Add(correlatedEvent);
+                }
+            }
 
             return correlatedEvents;
         }

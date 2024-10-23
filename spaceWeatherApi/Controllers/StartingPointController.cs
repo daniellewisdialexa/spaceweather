@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-
+using SpaceWeatherApi.Utils;
+using SpaceWeatherApi.Utils.Extentions;
 namespace SpaceWeatherApi.Controllers
 {
 
@@ -38,7 +39,7 @@ namespace SpaceWeatherApi.Controllers
                 return NotFound("No data found for the specified endpoint.");
             }
 
-            var count = CountOfProperty(data, property);
+            var count = ListExtensions.CountOf(data, property);
             return Ok(new { PropertyCount = count });
         }
     }

@@ -2,12 +2,13 @@
 using SpaceWeatherApi.DataModels;
 using System.Text;
 using SpaceWeatherApi.Utils;
+using SpaceWeatherApi.Services.Interfaces;
 namespace SpaceWeatherApi.Controllers
 {
 
     [ApiController]
     [Route("api/report")]
-    public class CorrelationController(IApiClient apiClient, FlareAnalyzer flareAnalyzer, DataUtils dataUtils) : BaseController(apiClient, flareAnalyzer)
+    public class CorrelationController(IApiClient apiClient, IFlareAnalyzerService flareAnalyzerService, DataUtils dataUtils) : BaseController(apiClient)
     {
 
         /// <summary>
@@ -24,11 +25,11 @@ namespace SpaceWeatherApi.Controllers
             {
                 var FLRdata = await ApiClient.GetDataAsync("FLR", startDate, endDate) ?? [];
                 var CMEdata = await ApiClient.GetDataAsync("CME", startDate, endDate) ?? [];
-                if (DataUtils == null)
+                if (dataUtils == null)
                 {
                     return StatusCode(500, "DataUtils is not initialized.");
                 }
-                var correlatedEvents = DataUtils.FindDetailedCorralatedEvents(FLRdata, CMEdata);
+                var correlatedEvents = dataUtils.FindDetailedCorralatedEvents(FLRdata, CMEdata);
 
                 return Ok(correlatedEvents);
             }
@@ -83,11 +84,11 @@ namespace SpaceWeatherApi.Controllers
             var flareEvents = FLRdata.Cast<FlareEvent>().ToList();
             var CMEEvents = CMEdata.Cast<CMEEvent>().ToList();
 
-            if (FlareAnalyzer == null)
+            if (flareAnalyzerService == null)
             {
                 return BadRequest("Flare analysis is not available");
             }
-            var interestingEvents = await FlareAnalyzer.AnalyzeEventsAsync(flareEvents, CMEEvents);
+            var interestingEvents = await flareAnalyzerService.AnalyzeEventsAsync(flareEvents, CMEEvents);
 
             var report = new StringBuilder();
             report.AppendLine("# Interesting Solar Events Report");

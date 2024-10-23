@@ -1,4 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using SpaceWeatherApi.Utils;
+using SpaceWeatherApi.Utils.Extentions;
 namespace SpaceWeatherApi.Controllers
 {
     [ApiController]
@@ -24,7 +26,7 @@ namespace SpaceWeatherApi.Controllers
 
             if (filter != null && filter.Length > 0)
             {
-                data = FilterData(data, filter);
+                data = ListExtensions.FilterData(data, filter);
             }
             return Ok(data);
         }

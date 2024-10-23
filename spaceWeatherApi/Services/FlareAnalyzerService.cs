@@ -1,21 +1,23 @@
 ﻿using SpaceWeatherApi.DataModels;
+using SpaceWeatherApi.Services.Interfaces;
+using SpaceWeatherApi.Utils.Extentions;
 
-namespace SpaceWeatherApi.Utils
+
+namespace SpaceWeatherApi.Services
 {
-    public class FlareAnalyzer
+    public class FlareAnalyzerService : IFlareAnalyzerService
     {
         private readonly IApiClient _apiClient;
         private readonly IAppSettings _appSettings;
         private readonly Dictionary<char, (double Min, double Max)> _expectedSpeedRangesCollection;
 
-        public FlareAnalyzer(IApiClient apiClient, IAppSettings appSettings)
+        public FlareAnalyzerService(IApiClient apiClient, IAppSettings appSettings)
         {
             _apiClient = apiClient;
             _appSettings = appSettings;
             _expectedSpeedRangesCollection = _appSettings.DataValues.ExpectedSpeedRanges
                 .ToDictionary(kvp => kvp.Key[0], kvp => (kvp.Value.Min, kvp.Value.Max));
         }
-
 
         /// <summary>
         ///  Get all CME events that are associated with the given flare event.
@@ -279,40 +281,8 @@ namespace SpaceWeatherApi.Utils
         }
 
 
-        /// <summary>
-        /// Format the given coordinate, latitude or longitude.
-        /// </summary>
-        /// <param name="coordinate"></param>
-        /// <param name="isLatitude"></param>
-        /// <returns>Formated coordinates</returns>
-        private static string FormatLatLong(double coordinate, bool isLatitude)
-        {
-            char direction = isLatitude ? (coordinate >= 0 ? 'N' : 'S') : (coordinate >= 0 ? 'E' : 'W');
-            coordinate = Math.Abs(coordinate);
-            int degrees = (int)coordinate;
-            double minutesDecimal = (coordinate - degrees) * 60;
-            int minutes = (int)minutesDecimal;
-            int seconds = (int)((minutesDecimal - minutes) * 60);
-
-            return $"{degrees}° {minutes}' {seconds}\" {direction}";
-        }
-
-        /// <summary>
-        /// Format the given angle
-        /// </summary>
-        /// <param name="angle"></param>
-        /// <returns>Fromated angle coordinate</returns>
-        private static string FormatAngle(double angle)
-        {
-            angle = Math.Abs(angle); // Ensure angle is positive
-            int degrees = (int)angle;
-            double minutesDecimal = (angle - degrees) * 60;
-            int minutes = (int)minutesDecimal;
-            int seconds = (int)((minutesDecimal - minutes) * 60);
-
-            return $"{degrees}° {minutes}' {seconds}\"";
-        }
-
+   
+     
         /// <summary>
         /// Get the description of the given magnetic class.
         /// </summary>
@@ -389,16 +359,16 @@ namespace SpaceWeatherApi.Utils
                     reason += $"\n- Is Most Accurate: {analysis.IsMostAccurate}";
 
                     if (analysis.HalfAngle.HasValue)
-                        reason += $"\n- Half Angle: {analysis.HalfAngle.Value:F1}° ({FormatAngle(Convert.ToDouble(analysis.HalfAngle.Value))})";
+                        reason += $"\n- Half Angle: {analysis.HalfAngle.Value:F1}° ({FromatingExtensions.FormatAsAngle(Convert.ToDouble(analysis.HalfAngle.Value))})";
 
                     if (analysis.Speed.HasValue)
                         reason += $"\n- Speed: {analysis.Speed.Value:F1} km/s";
 
                     if (analysis.Latitude.HasValue)
-                        reason += $"\n- Latitude: {FormatLatLong(Convert.ToDouble(analysis.Latitude.Value), true)}";
+                        reason += $"\n- Latitude: {FromatingExtensions.FormatAsLatLong(Convert.ToDouble(analysis.Latitude.Value), true)}";
 
                     if (analysis.Longitude.HasValue)
-                        reason += $"\n- Longitude: {FormatLatLong(Convert.ToDouble(analysis.Longitude.Value), true)}";
+                        reason += $"\n- Longitude: {FromatingExtensions.FormatAsLatLong(Convert.ToDouble(analysis.Longitude.Value), true)}";
 
                     if (analysis.Tilt.HasValue)
                         reason += $"\n- Tilt: {analysis.Tilt.Value:F1} degrees";
@@ -421,9 +391,9 @@ namespace SpaceWeatherApi.Utils
                     reason += $"\n\nMost Accurate CME Analysis:";
                     reason += $"\n- Type: {mostAccurateAnalysis.Type ?? "Unknown"}";
                     reason += $"\n- Time: {mostAccurateAnalysis.Time21_5.ToString() ?? "Unkown"}";
-                    reason += $"\n- Half Angle: {FormatAngle(Convert.ToDouble(mostAccurateAnalysis.HalfAngle))}";
-                    reason += $"\n- Latitude: {FormatLatLong(Convert.ToDouble(mostAccurateAnalysis.Latitude ?? 0), true)}";
-                    reason += $"\n- Longitude: {FormatLatLong(Convert.ToDouble(mostAccurateAnalysis.Longitude ?? 0), false)}";
+                    reason += $"\n- Half Angle: { FromatingExtensions.FormatAsAngle(Convert.ToDouble(mostAccurateAnalysis.HalfAngle))}";
+                    reason += $"\n- Latitude: {FromatingExtensions.FormatAsLatLong(Convert.ToDouble(mostAccurateAnalysis.Latitude ?? 0), true)}";
+                    reason += $"\n- Longitude: {FromatingExtensions.FormatAsLatLong(Convert.ToDouble(mostAccurateAnalysis.Longitude ?? 0), false)}";
                     reason += $"\n- SpeedMeasuredAtHeight: {mostAccurateAnalysis.SpeedMeasuredAtHeight ?? 0} km/s";
                     reason += $"\n- Speed: {mostAccurateAnalysis.Speed?.ToString("F1") ?? "Unknown"} km/s";
                     reason += $"\n- Note: {mostAccurateAnalysis.Note ?? "Unknown"}";
@@ -455,8 +425,8 @@ namespace SpaceWeatherApi.Utils
                 reason += $"\n- Number of Spots: {allSunspotData.NumSpot}";
                 reason += $"\n- Spot DataUtils: {allSunspotData.SpotClass ?? "Unknown"}";
                 reason += $"\n- Magnetic DataUtils: {GetMagneticClassDescription(allSunspotData.MagClass)?? "Unknown"}; ";
-                reason += $"\n- Latitude: {FormatLatLong(Convert.ToDouble(allSunspotData.Latitude), true)}";
-                reason += $"\n- Longitude: {FormatLatLong(Convert.ToDouble(allSunspotData.Longitude), false)}";
+                reason += $"\n- Latitude: {FromatingExtensions.FormatAsLatLong(Convert.ToDouble(allSunspotData.Latitude), true)}";
+                reason += $"\n- Longitude: {FromatingExtensions.FormatAsLatLong(Convert.ToDouble(allSunspotData.Longitude), false)}";
 
                 if (allSunspotData.Area > 500)
                     reason += "\nObservation: Large sunspot area, associated with higher flare probability.";
