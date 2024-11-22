@@ -1,15 +1,27 @@
-﻿using Microsoft.Extensions.Options;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using SpaceWeatherApi.DataModels;
+using SpaceWeatherApi.Utils;
 using System.Globalization;
 
 namespace SpaceWeatherApi
 {
-    public class ApiClient(HttpClient httpClient, IOptions<AppSettings> appSettings)
+    public interface IApiClient
+    {
+        Task<List<T>> FetchDONKIDataAsync<T>(string endpoint, DateTime? startDate = null, DateTime? endDate = null);
+        Task<List<object>?> GetDataAsync(string endpoint, string? startDate = null, string? endDate = null);
+        Task<List<SunspotModel>> GetAllSunspotDataAsync();
+        Task<FluxModel> GetTodayFluxNum();
+        Task<List<SolarRegionModel>> GetAllSolarRegionDataAsync();
+        Task<List<T>> GetNOAADataAsync<T>(string endpoint) where T : class;
+        Task<T?> FetchSingleNOAADataAsync<T>(string path) where T : class;
+        Task<List<T>> FetchNOAADataAsync<T>(string endpoint);
+    }
+
+    public class ApiClient(HttpClient httpClient, IAppSettings appSettings,DateParseUtils dateUtils) : IApiClient
     {
         private readonly HttpClient _httpClient = httpClient;
-        private readonly AppSettings _appSettings = appSettings.Value;
+        private readonly IAppSettings _appSettings = appSettings;
 
         /// <summary>
         /// Mapping of endpoint names to their respective event types
@@ -29,42 +41,26 @@ namespace SpaceWeatherApi
         /// <param name="startDate"></param>
         /// <param name="endDate"></param>
         /// <returns></returns>
-        protected async Task<List<T>> FetchDONKIDataAsync<T>(string endpoint, DateTime? startDate = null, DateTime? endDate = null)
+        public async Task<List<T>> FetchDONKIDataAsync<T>(string endpoint, DateTime? startDate = null, DateTime? endDate = null)
         {
             var queryParameters = new List<string>();
-
-            if (startDate.HasValue)
+            if (startDate.HasValue || endDate.HasValue)
             {
-                queryParameters.Add($"startDate={startDate:yyyy-MM-dd}");
-            }
-
-            if (endDate.HasValue)
-            {
-                queryParameters.Add($"endDate={endDate:yyyy-MM-dd}");
+                queryParameters.Add(
+                    $"{(startDate.HasValue ? $"startDate={startDate:yyyy-MM-dd}" : string.Empty)}" +
+                    $"{(endDate.HasValue ? $"&endDate={endDate:yyyy-MM-dd}" : string.Empty)}"
+                );
             }
 
             queryParameters.Add($"api_key={_appSettings.IdentitySettings.ApiKey}");
-
             var queryString = string.Join("&", queryParameters);
             var fullUrl = new Uri(new Uri(_appSettings.ConnectionStrings.DONKIBaseURL), $"{endpoint}?{queryString}");
-
-            try
-            {
-                var response = await _httpClient.GetAsync(fullUrl);
-                response.EnsureSuccessStatusCode();
-
-                var data = await response.Content.ReadAsStringAsync();
-
-                // Deserialize the JSON data into a list of T objects
-                var events = JsonConvert.DeserializeObject<List<T>>(data);
-
-                return events ?? [];
-            }
-            catch (HttpRequestException e)
-            {
-                Console.WriteLine($"Request error: {e.Message}  Full URL was: {fullUrl}");
-                return [];
-            }
+            var response = await _httpClient.GetAsync(fullUrl);
+           
+            response.EnsureSuccessStatusCode();
+            var data = await response.Content.ReadAsStringAsync();
+            var events = JsonConvert.DeserializeObject<List<T>>(data);
+            return events ?? [];
         }
 
         /// <summary>
@@ -73,7 +69,7 @@ namespace SpaceWeatherApi
         /// <param name="endpoint"></param>
         /// <param name="startDate"></param> 
         /// <param name="endDate"></param>
-        /// <returns></returns>
+        /// <returns>List of typed events </returns>
         public async Task<List<object>?> GetDataAsync(string endpoint, string? startDate = null, string? endDate = null)
         {
             if (!EndpointTypeMap.TryGetValue(endpoint, out var eventType))
@@ -81,22 +77,11 @@ namespace SpaceWeatherApi
                 return null;
             }
 
-            var (parsedStartDate, parsedEndDate) = ParseDateTime(startDate, endDate);
+            var (parsedStartDate, parsedEndDate) = dateUtils.ParseDateTime(startDate, endDate);
 
             try
             {
-                return eventType switch
-                {
-                    Type t when t == typeof(FlareEvent) =>
-                        (await FetchDONKIDataAsync<FlareEvent>(endpoint, parsedStartDate, parsedEndDate))
-                            .Cast<object>().ToList(),
-
-                    Type t when t == typeof(CMEEvent) =>
-                        (await FetchDONKIDataAsync<CMEEvent>(endpoint, parsedStartDate, parsedEndDate))
-                            .Cast<object>().ToList(),
-
-                    _ => null
-                };
+                return await FetchDataForType(eventType, endpoint, parsedStartDate, parsedEndDate);
             }
             catch (Exception ex)
             {
@@ -106,60 +91,29 @@ namespace SpaceWeatherApi
         }
 
         /// <summary>
-        /// Parsing the start and end date strings into DateTime objects.   
-        /// startDate param accepts strings: "today", "yr{number}", "yyyy-MM-dd"
+        /// Fetch data for the given event type
         /// </summary>
-        /// <param name="startDate"></param> 
-        /// <param name="endDate"></param>
+        /// <param name="eventType"></param>
+        /// <param name="endpoint"></param>
+        /// <param name="parsedStartDate"></param>
+        /// <param name="parsedEndDate"></param>
         /// <returns></returns>
-        /// <exception cref="ArgumentException"></exception>
-        protected (DateTime parsedStartDate, DateTime parsedEndDate) ParseDateTime(string? startDate, string? endDate)
+        private async Task<List<object>?> FetchDataForType(Type eventType, string endpoint, DateTime? parsedStartDate, DateTime? parsedEndDate)
         {
-            DateTime parsedStartDate;
-            DateTime parsedEndDate;
-
-            if (string.IsNullOrEmpty(startDate) && string.IsNullOrEmpty(endDate))
+            if (eventType == typeof(FlareEvent))
             {
-                parsedStartDate = DateTime.UtcNow.AddDays(-30);
-                parsedEndDate = DateTime.UtcNow;
+                return (await FetchDONKIDataAsync<FlareEvent>(endpoint, parsedStartDate, parsedEndDate))
+                    .Cast<object>().ToList();
             }
-            else if (startDate != null && startDate.Equals("today", StringComparison.OrdinalIgnoreCase))
+            else if (eventType == typeof(CMEEvent))
             {
-                parsedStartDate = DateTime.UtcNow;
-                parsedEndDate = DateTime.UtcNow;
+                return (await FetchDONKIDataAsync<CMEEvent>(endpoint, parsedStartDate, parsedEndDate))
+                    .Cast<object>().ToList();
             }
-            else if (startDate != null && startDate.StartsWith("yr", StringComparison.OrdinalIgnoreCase))
-            {
-                if (int.TryParse(startDate.AsSpan(2), out int years))
-                {
-                    parsedStartDate = DateTime.UtcNow.AddYears(-years);
-                    parsedEndDate = DateTime.UtcNow;
-                }
-                else
-                {
-                    throw new ArgumentException("Invalid year format in start date", nameof(startDate));
-                }
-            }
-            else
-            {
-                parsedStartDate = DateTime.TryParseExact(startDate, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime sDate)
-                    ? sDate
-                    : throw new ArgumentException("Invalid start date format", nameof(startDate));
-
-                parsedEndDate = string.IsNullOrEmpty(endDate)
-                    ? DateTime.UtcNow
-                    : DateTime.TryParseExact(endDate, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime eDate)
-                        ? eDate
-                        : throw new ArgumentException("Invalid end date format", nameof(endDate));
-            }
-
-            return (parsedStartDate, parsedEndDate);
+            return null;
         }
 
-
-
-
-       //---- NOAA Data ----\\
+        //---- NOAA Data ----\\
         /// <summary>
         /// Get all the sunspot data 
         /// </summary>
@@ -169,20 +123,28 @@ namespace SpaceWeatherApi
             return await GetNOAADataAsync<SunspotModel>("sunspot");
         }
 
+        /// <summary>
+        /// Get the today's flux number
+        /// </summary>
+        /// <returns></returns>
         public async Task<FluxModel> GetTodayFluxNum()
         {
             return (await GetNOAADataAsync<FluxModel>("fluxtoday")).Single();
         }
 
-
+        /// <summary>
+        /// Get all the solar region data
+        /// </summary>
+        /// <returns></returns>
         public async Task<List<SolarRegionModel>> GetAllSolarRegionDataAsync()
         {
-
             return await GetNOAADataAsync<SolarRegionModel>("solarregion");
         }
 
-
-       private readonly Dictionary<string, string> _endpointMap = new()
+        /// <summary>
+        /// Maps the endpoint to the respective NOAA API path
+        /// </summary>
+        private readonly Dictionary<string, string> _endpointMap = new()
             {
                 ["sunspot"] = "json/sunspot_report.json",
                 ["solarregion"] = "json/solar_regions.json",
@@ -194,29 +156,33 @@ namespace SpaceWeatherApi
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="endpoint"></param>
-        /// <returns></returns>
-
+        /// <returns>NOAA data</returns>
         public async Task<List<T>> GetNOAADataAsync<T>(string endpoint) where T : class
         {
+            if (!_endpointMap.TryGetValue(endpoint, out var path))
+            {
+                return [];
+            }
+
             if (endpoint == "fluxtoday")
             {
-                if (_endpointMap.TryGetValue(endpoint, out var path))
-                {
-                    var result = await FetchSingleNOAADataAsync<T>(path);
-                    return result != null ? [result] : [];
-                }
+                var result = await FetchSingleNOAADataAsync<T>(path);
+                return result != null ? [result] : [];
             }
-            
-            if (_endpointMap.TryGetValue(endpoint, out var jsonPath))
-            {
-                return await FetchNOAADataAsync<T>(jsonPath);
-            }
-            return [];
+
+            return await FetchNOAADataAsync<T>(path);
         }
 
 
-
-        private async Task<T> FetchSingleNOAADataAsync<T>(string path) where T : class
+        /// <summary>
+        ///  Fetch single object of NOAA data - Used mainly for fetching today's flux number
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="path"></param>
+        /// <returns> 
+        /// Deserialized  JSON object of type T
+        /// </returns>
+        public async Task<T?> FetchSingleNOAADataAsync<T>(string path) where T : class
         {
             string baseUrl = _appSettings.ConnectionStrings.NOAABaseURl;
             string url = new Uri(new Uri(baseUrl), path).ToString();
@@ -225,10 +191,9 @@ namespace SpaceWeatherApi
             response.EnsureSuccessStatusCode();
             string jsonResponse = await response.Content.ReadAsStringAsync();
 
-            return  JsonConvert.DeserializeObject<T>(jsonResponse);
+            return JsonConvert.DeserializeObject<T>(jsonResponse);
          
         }
-
 
 
         /// <summary>
@@ -236,8 +201,8 @@ namespace SpaceWeatherApi
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="endpoint"></param>
-        /// <returns></returns>
-        protected async Task<List<T>> FetchNOAADataAsync<T>(string endpoint)
+        /// <returns>NOAA json data</returns>
+        public async Task<List<T>> FetchNOAADataAsync<T>(string endpoint)
         {
             try
             {

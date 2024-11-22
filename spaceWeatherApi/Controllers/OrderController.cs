@@ -3,7 +3,7 @@ namespace SpaceWeatherApi.Controllers
 {
     [ApiController]
     [Route("api/{endpoint}/order")]
-    public class OrderController(ApiClient nasaApiClient) : BaseController(nasaApiClient)
+    public class OrderController(IApiClient  apiClient) : BaseController (apiClient)
     {
         /// <summary>
         /// Order the data by the given property
@@ -17,7 +17,7 @@ namespace SpaceWeatherApi.Controllers
         [HttpGet]
         public async Task<IActionResult> OrderFlareData(string endpoint,[FromQuery] Order order, string property, string? startDate = null, string? endDate = null)
         {
-            var data = await _ApiClient.GetDataAsync(endpoint, startDate, endDate);
+            var data = await ApiClient.GetDataAsync(endpoint, startDate, endDate);
             if (data == null)
             {
                 return StatusCode(500, "Failed to retrieve data.");
